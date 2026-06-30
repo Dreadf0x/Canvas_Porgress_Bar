@@ -1,8 +1,16 @@
+# OS files
 .DS_Store
 Thumbs.db
 
+# Dependencies
 node_modules/
 
+# Build output
+dist/
+build/
+
+# Editor
 .vscode/settings.json
 
-dist/
+# Logs
+*.log

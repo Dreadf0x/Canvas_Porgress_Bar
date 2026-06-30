@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Canvas Module Progress Tracker",
-  "version": "0.2.0",
-  "description": "Adds a keyword-based visual module progress tracker to Canvas module pages.",
+  "name": "Canvas Progress Bar",
+  "version": "0.6.1",
+  "description": "Canvas module progress tracker with instructor rules, role detection, and collapsible panel.",
   "permissions": [
     "storage"
   ],
@@ -15,12 +15,13 @@
         "https://ubtech.instructure.com/courses/*/modules*"
       ],
       "js": [
-        "src/content.js"
+        "src/content/content.js"
       ],
       "css": [
         "css/tracker.css"
       ],
-      "run_at": "document_idle"
+      "run_at": "document_idle",
+      "type": "module"
     }
   ]
 }
