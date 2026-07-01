@@ -11,7 +11,8 @@ import { loadRules, saveRules, loadUiState, saveUiState } from "./storage/rules.
 import {
   getStatusInfo,
   renderItem,
-  renderModule
+  renderModule,
+  renderTracker
 } from "./ui/panel.js";
 export function initializeApp() {
   "use strict";
@@ -55,7 +56,22 @@ export function initializeApp() {
     document.getElementById(TAB_ID)?.remove();
   }
   
-
+  function renderProgressTracker(wrapper, courseId, data, analyzedModules) {
+    renderTracker({
+      wrapper,
+      courseId,
+      data,
+      analyzedModules,
+      isInstructor: userIsInstructor(),
+      showSettingsForModuleId: appState.showSettingsForModuleId,
+      renderSettingsPanel,
+      renderItem,
+      escapeHtml,
+      bindEvents,
+      debugMode: DEBUG_MODE,
+      passingPercent: PASSING_PERCENT
+    });
+  }
 
   function userIsInstructor() {
     return appState.role === "instructor";
@@ -204,101 +220,6 @@ export function initializeApp() {
     };
   }
 
-  function renderTracker(wrapper, courseId, data, analyzedModules) {
-    if (!wrapper) return;
-
-    const isInstructor = userIsInstructor();
-    const allAnalyzedItems = analyzedModules.flatMap((m) => m.items);
-    const overallTotal = allAnalyzedItems.length;
-    const overallComplete = allAnalyzedItems.filter((i) => i.complete).length;
-    const overallPercent = overallTotal === 0 ? 0 : Math.round((overallComplete / overallTotal) * 100);
-
-    const waitingCount = allAnalyzedItems.filter(i => i.status === "waiting").length;
-    const belowCount = allAnalyzedItems.filter(i => i.status === "below_passing").length;
-    const missingCount = allAnalyzedItems.filter(i => i.status === "missing").length;
-    const customRuleCount = analyzedModules.filter(m => m.ruleMode === "custom").length;
-
-    const moduleRows = analyzedModules.map((module, index) => {
-        const settingsPanel =
-            isInstructor &&
-            String(appState.showSettingsForModuleId) === String(module.id)
-                ? renderSettingsPanel(module.id, appState.data)
-                : "";
-
-        return renderModule(
-            module,
-            index,
-            isInstructor,
-            settingsPanel,
-            renderItem,
-            escapeHtml
-        );
-    }).join("");
-  
-
-    const debugPanel = isInstructor && DEBUG_MODE ? `
-      <details class="cpt-debug">
-        <summary>Developer</summary>
-        <dl>
-          <div><dt>Detected Role</dt><dd>${escapeHtml(data.role)}</dd></div>
-          <div><dt>API Status</dt><dd>Connected</dd></div>
-          <div><dt>Modules</dt><dd>${data.modules.length}</dd></div>
-          <div><dt>Custom Rule Modules</dt><dd>${customRuleCount}</dd></div>
-          <div><dt>Module Items</dt><dd>${Object.values(data.moduleItemsByModuleId).flat().length}</dd></div>
-          <div><dt>Required Items</dt><dd>${overallTotal}</dd></div>
-          <div><dt>Passed</dt><dd>${overallComplete}</dd></div>
-          <div><dt>Waiting</dt><dd>${waitingCount}</dd></div>
-          <div><dt>Below 80%</dt><dd>${belowCount}</dd></div>
-          <div><dt>Missing</dt><dd>${missingCount}</dd></div>
-          <div><dt>Load Time</dt><dd>${data.elapsedMs} ms</dd></div>
-        </dl>
-      </details>
-    ` : "";
-
-    wrapper.innerHTML = `
-      <div class="cpt-header">
-        <div>
-          <strong>Module Progress</strong>
-          <span>${isInstructor ? "Instructor" : "Student"} View · ${PASSING_PERCENT}%+</span>
-        </div>
-        <div class="cpt-header-actions">
-          <button id="cpt-collapse" type="button" title="Collapse panel">–</button>
-          <button id="cpt-refresh" type="button" title="Refresh progress">↻</button>
-        </div>
-      </div>
-
-      <div class="cpt-overall">
-        <div class="cpt-module-topline">
-          <span class="cpt-module-title">Overall Required Progress</span>
-          <span class="cpt-module-percent">${overallPercent}%</span>
-        </div>
-        <div class="cpt-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${overallPercent}">
-          <div class="cpt-bar-fill" style="width: ${overallPercent}%"></div>
-        </div>
-        <div class="cpt-status">${overallComplete}/${overallTotal} required items passed</div>
-      </div>
-
-      <div class="cpt-summary">
-        <span>Waiting: ${waitingCount}</span>
-        <span>Below 80%: ${belowCount}</span>
-        <span>Missing: ${missingCount}</span>
-        ${isInstructor ? `<span>Custom Rules: ${customRuleCount}</span>` : ""}
-      </div>
-
-      
-
-      <div class="cpt-body">${moduleRows}</div>
-
-      ${debugPanel}
-
-      <div class="cpt-footer">
-        Course ${escapeHtml(courseId)} · ${escapeHtml(data.user.name || data.user.login_id || "current user")}
-      </div>
-    `;
-
-    bindEvents(wrapper);
-  }
-
   
 
   function renderSettingsPanel(moduleId, data) {
@@ -405,7 +326,7 @@ export function initializeApp() {
       REQUIRED_KEYWORDS,
       PASSING_PERCENT
     );
-    renderTracker(wrapper, appState.courseId, appState.data, appState.modules);
+    renderProgressTracker(wrapper, appState.courseId, appState.data, appState.modules);
   }
 
   async function reloadDataAndRender() {
@@ -419,7 +340,7 @@ export function initializeApp() {
       REQUIRED_KEYWORDS,
       PASSING_PERCENT
     );
-    renderTracker(wrapper, appState.courseId, appState.data, appState.modules);
+    renderProgressTracker(wrapper, appState.courseId, appState.data, appState.modules);
   }
 
   async function init() {
@@ -447,7 +368,7 @@ export function initializeApp() {
       REQUIRED_KEYWORDS,
       PASSING_PERCENT
     );
-renderTracker(wrapper, courseId, appState.data, appState.modules);
+renderProgressTracker(wrapper, courseId, appState.data, appState.modules);
     } catch (error) {
       renderError(wrapper, error);
     }
