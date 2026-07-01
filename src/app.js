@@ -199,7 +199,8 @@ export function initializeApp() {
   }
 
 
-  function createStatusResult({
+  
+   function createStatusResult({
     item,
     title,
     status,
@@ -260,15 +261,12 @@ export function initializeApp() {
     const submittedAt = submission.submitted_at;
 
     if (!submittedAt || workflow === "unsubmitted") {
-      return {
-        id: item.id,
+      return createStatusResult({
+        item,
         title,
-        type: item.type,
         status: "missing",
-        complete: false,
-        percent: null,
         detail: "No submission found."
-      };
+      });
     }
 
     const score = submission.score === null || submission.score === undefined
@@ -276,51 +274,44 @@ export function initializeApp() {
       : Number(submission.score);
 
     if (score === null || Number.isNaN(score)) {
-      return {
-        id: item.id,
+      return createStatusResult({
+        item,
         title,
-        type: item.type,
         status: "waiting",
-        complete: false,
-        percent: null,
         detail: "Submitted, waiting for grade."
-      };
+      });
     }
 
     const pointsPossible = Number(assignment.points_possible);
 
     if (!pointsPossible || Number.isNaN(pointsPossible)) {
-      return {
-        id: item.id,
+      return createStatusResult({
+        item,
         title,
-        type: item.type,
         status: "graded_no_points",
-        complete: false,
-        percent: null,
         detail: `Score ${score}; points possible unavailable.`
-      };
+      });
     }
 
 
     function calculateGradePercent(score, pointsPossible) {
       return Math.round((score / pointsPossible) * 100);
    }
-    const percent = calculateGradePercent(score, pointsPossible);
+    
+   const percent = calculateGradePercent(score, pointsPossible);
     const complete = percent >= PASSING_PERCENT;
 
-    return {
-      id: item.id,
+    return createStatusResult({
+      item,
       title,
-      type: item.type,
       status: complete ? "passed" : "below_passing",
       complete,
       percent,
       score,
       pointsPossible,
       detail: `${score}/${pointsPossible} = ${percent}%`
-    };
+    });
   }
-
   function analyzeModules(data) {
     return data.modules.map((module) => {
       const items = data.moduleItemsByModuleId[module.id] || [];
