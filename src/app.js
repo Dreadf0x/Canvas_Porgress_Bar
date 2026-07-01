@@ -1,3 +1,4 @@
+import {isRequiredTitle, isTextHeaderItem, getAssignmentIdFromModuleItem} from "./progress/engine.js";
 import { canvasFetch, canvasFetchAll } from "./api/canvas.js";
 import { detectRoleFromPermissions } from "./api/roles.js";
 import { loadRules, saveRules, loadUiState, saveUiState } from "./storage/rules.js";
@@ -42,25 +43,7 @@ export function initializeApp() {
     document.getElementById(EXTENSION_ID)?.remove();
     document.getElementById(TAB_ID)?.remove();
   }
-
-
-  function isRequiredTitle(title) {
-    const lowered = cleanText(title).toLowerCase();
-    return REQUIRED_KEYWORDS.some((keyword) => lowered.includes(keyword));
-  }
-
-  function isTextHeaderItem(item) {
-    const type = String(item.type || "").toLowerCase();
-    return type === "subheader" || type === "text_header" || type === "contextmoduleheader";
-  }
-
-  function getAssignmentIdFromModuleItem(item) {
-    if (item.assignment_id) return Number(item.assignment_id);
-    if ((item.type === "Assignment" || item.type === "Quiz" || item.type === "ExternalTool") && item.content_id) {
-      return Number(item.content_id);
-    }
-    return null;
-  }
+  
 
 
   function userIsInstructor() {
@@ -81,7 +64,7 @@ export function initializeApp() {
 
     return moduleItems.filter((item) => {
       if (isTextHeaderItem(item)) return false;
-      return isRequiredTitle(item.title);
+      return isRequiredTitle(item.title, REQUIRED_KEYWORDS);
     });
   }
 
@@ -192,15 +175,12 @@ export function initializeApp() {
     const [assignments, submissions] = await Promise.all([
       assignmentIds.length
         ? Promise.all(assignmentIds.map((id) =>
-            canvasFetch(`/api/v1/courses/${courseId}/assignments/${id}/submissions/self`).catch(() => ({
-              assignment_id: id,
-              workflow_state: "unavailable",
-              score: null,
-              submitted_at: null,
-              _cpt_unavailable: true
+          canvasFetch(`/api/v1/courses/${courseId}/assignments/${id}`).catch((error) => ({
+            id,
+              _cpt_error: error.message
             }))
           ))
-        : Promise.resolve([]),
+         : Promise.resolve([]),
 
       assignmentIds.length
         ? Promise.all(assignmentIds.map((id) =>
@@ -482,7 +462,7 @@ export function initializeApp() {
     const selectedIds = new Set(
       rule && rule.mode === "custom"
         ? (rule.requiredItemIds || []).map(String)
-        : items.filter((item) => !isTextHeaderItem(item) && isRequiredTitle(item.title)).map((item) => String(item.id))
+        : items.filter((item) => !isTextHeaderItem(item) && isRequiredTitle(item.title, REQUIRED_KEYWORDS)).map((item) => String(item.id))
     );
 
     const itemRows = items.map((item) => {
