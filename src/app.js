@@ -1,5 +1,5 @@
 import { canvasFetch, canvasFetchAll } from "./api/canvas.js";
-
+import { detectRoleFromPermissions } from "./api/roles.js";
 export function initializeApp() {
   "use strict";
 
@@ -102,26 +102,6 @@ export function initializeApp() {
     return null;
   }
 
-  function detectRoleFromPermissions(course) {
-    const permissions = course?.permissions || {};
-    const enrollmentTypes = (course?.enrollments || []).map(e => String(e.type || "").toLowerCase());
-
-    const instructorSignals = [
-      permissions.manage_assignments,
-      permissions.manage_grades,
-      permissions.manage_students,
-      permissions.update,
-      permissions.create_discussion_topic
-    ];
-
-    const instructorEnrollment = enrollmentTypes.some(type =>
-      type.includes("teacher") ||
-      type.includes("ta") ||
-      type.includes("designer")
-    );
-
-    return instructorSignals.some(Boolean) || instructorEnrollment ? "instructor" : "student";
-  }
 
   function userIsInstructor() {
     return appState.role === "instructor";
