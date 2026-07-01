@@ -1,4 +1,9 @@
-import {isRequiredTitle, isTextHeaderItem, getAssignmentIdFromModuleItem} from "./progress/engine.js";
+import {
+  isRequiredTitle,
+  isTextHeaderItem,
+  getAssignmentIdFromModuleItem,
+  getRequiredItemsForModule
+} from "./progress/engine.js";
 import { canvasFetch, canvasFetchAll } from "./api/canvas.js";
 import { detectRoleFromPermissions } from "./api/roles.js";
 import { loadRules, saveRules, loadUiState, saveUiState } from "./storage/rules.js";
@@ -54,19 +59,7 @@ export function initializeApp() {
     return appState.rules[String(moduleId)] || null;
   }
 
-  function getRequiredItemsForModule(module, moduleItems) {
-    const rule = getRuleForModule(module.id);
-
-    if (rule && rule.mode === "custom") {
-      const selectedIds = new Set((rule.requiredItemIds || []).map(String));
-      return moduleItems.filter((item) => selectedIds.has(String(item.id)));
-    }
-
-    return moduleItems.filter((item) => {
-      if (isTextHeaderItem(item)) return false;
-      return isRequiredTitle(item.title, REQUIRED_KEYWORDS);
-    });
-  }
+ 
 
   function createShell() {
     removeExistingUI();
@@ -165,7 +158,7 @@ export function initializeApp() {
     }));
 
     const requiredItems = modules.flatMap((module) =>
-      getRequiredItemsForModule(module, moduleItemsByModuleId[module.id] || [])
+      getRequiredItemsForModule(module, moduleItemsByModuleId[module.id] || [], appState.rules, REQUIRED_KEYWORDS)
     );
 
     const assignmentIds = Array.from(
@@ -318,7 +311,7 @@ export function initializeApp() {
   function analyzeModules(data) {
     return data.modules.map((module) => {
       const items = data.moduleItemsByModuleId[module.id] || [];
-      const requiredItems = getRequiredItemsForModule(module, items);
+      const requiredItems = getRequiredItemsForModule(module, items, appState.rules, REQUIRED_KEYWORDS);
       const analyzedItems = requiredItems.map((item) => analyzeItem(item, data));
       const total = analyzedItems.length;
       const complete = analyzedItems.filter((item) => item.complete).length;

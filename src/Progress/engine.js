@@ -25,3 +25,17 @@ export function getAssignmentIdFromModuleItem(item) {
 
   return null;
 }
+
+export function getRequiredItemsForModule(module, moduleItems, rules, requiredKeywords) {
+  const rule = rules[String(module.id)] || null;
+
+  if (rule && rule.mode === "custom") {
+    const selectedIds = new Set((rule.requiredItemIds || []).map(String));
+    return moduleItems.filter((item) => selectedIds.has(String(item.id)));
+  }
+
+  return moduleItems.filter((item) => {
+    if (isTextHeaderItem(item)) return false;
+    return isRequiredTitle(item.title, requiredKeywords);
+  });
+}
