@@ -8,6 +8,11 @@ import {
 import { canvasFetch, canvasFetchAll } from "./api/canvas.js";
 import { detectRoleFromPermissions } from "./api/roles.js";
 import { loadRules, saveRules, loadUiState, saveUiState } from "./storage/rules.js";
+import {
+  getStatusInfo,
+  renderItem,
+  renderModule
+} from "./ui/panel.js";
 export function initializeApp() {
   "use strict";
 
@@ -213,7 +218,22 @@ export function initializeApp() {
     const missingCount = allAnalyzedItems.filter(i => i.status === "missing").length;
     const customRuleCount = analyzedModules.filter(m => m.ruleMode === "custom").length;
 
-    const moduleRows = analyzedModules.map((module, index) => renderModule(module, index, isInstructor)).join("");
+    const moduleRows = analyzedModules.map((module, index) => {
+        const settingsPanel =
+            isInstructor &&
+            String(appState.showSettingsForModuleId) === String(module.id)
+                ? renderSettingsPanel(module.id, appState.data)
+                : "";
+
+        return renderModule(
+            module,
+            index,
+            isInstructor,
+            settingsPanel,
+            renderItem,
+            escapeHtml
+        );
+    }).join("");
   
 
     const debugPanel = isInstructor && DEBUG_MODE ? `
@@ -279,41 +299,7 @@ export function initializeApp() {
     bindEvents(wrapper);
   }
 
-  function renderModule(module, index, isInstructor) {
-    const settingsPanel =
-  isInstructor && String(appState.showSettingsForModuleId) === String(module.id)
-    ? renderSettingsPanel(module.id, appState.data)
-    : "";
-    const itemList = module.items.length
-      ? module.items.map(renderItem).join("")
-      : `<li class="cpt-item-muted">No required items found.</li>`;
-
-    const ruleBadge = isInstructor
-      ? `<span class="cpt-rule-badge">${module.ruleMode === "custom" ? "Custom" : "Keyword"}</span>`
-      : "";
-
-    const settingsButton = isInstructor
-      ? `<button class="cpt-settings-btn" type="button" data-module-id="${module.id}" title="Set requirements">⚙</button>`
-      : "";
-
-    return `
-      <details class="cpt-module-row" ${index === 0 ? "open" : ""}>
-        <summary>
-          ${isInstructor ? `<div class="cpt-module-actions">${ruleBadge}${settingsButton}</div>` : ""}
-          <div class="cpt-module-topline">
-            <span class="cpt-module-title">${escapeHtml(module.name)}</span>
-            <span class="cpt-module-percent">${module.percent}%</span>
-          </div>
-          <div class="cpt-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${module.percent}">
-            <div class="cpt-bar-fill" style="width: ${module.percent}%"></div>
-          </div>
-          <div class="cpt-status">${module.complete}/${module.total} required passed</div>
-        </summary>
-        ${settingsPanel}
-        <ul class="cpt-item-list">${itemList}</ul>
-      </details>
-    `;
-  }
+  
 
   function renderSettingsPanel(moduleId, data) {
     const module = data.modules.find((m) => String(m.id) === String(moduleId));
@@ -363,37 +349,9 @@ export function initializeApp() {
     `;
   }
 
-  function renderItem(item) {
-    const statusInfo = getStatusInfo(item);
-    const gradeText = item.percent === null ? "" : ` <span class="cpt-grade">(${item.percent}%)</span>`;
+  
 
-    return `
-      <li class="${statusInfo.className}">
-        <span class="cpt-icon">${statusInfo.icon}</span>
-        <span>
-          <strong>${escapeHtml(item.title)}</strong>${gradeText}
-          <small>${escapeHtml(statusInfo.label)} · ${escapeHtml(item.detail || "")}</small>
-        </span>
-      </li>
-    `;
-  }
-
-  function getStatusInfo(item) {
-    switch (item.status) {
-      case "passed":
-        return { icon: "✓", label: "Passed", className: "cpt-item-complete" };
-      case "below_passing":
-        return { icon: "!", label: "Below 80%", className: "cpt-item-warning" };
-      case "waiting":
-        return { icon: "…", label: "Waiting for grade", className: "cpt-item-waiting" };
-      case "missing":
-        return { icon: "○", label: "Missing", className: "cpt-item-incomplete" };
-      case "not_scorable":
-        return { icon: "?", label: "Not scorable", className: "cpt-item-muted" };
-      default:
-        return { icon: "!", label: "Error", className: "cpt-item-error" };
-    }
-  }
+  
 
   function bindEvents(wrapper) {
     bindHeaderButtons();
