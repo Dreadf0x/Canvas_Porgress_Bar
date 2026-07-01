@@ -239,28 +239,22 @@ export function initializeApp() {
     const submission = data.submissionMap.get(Number(assignmentId));
 
     if (!assignment || assignment._cpt_error) {
-      return {
-        id: item.id,
+      return createStatusResult({
+        item,
         title,
-        type: item.type || "Unknown",
         status: "error",
-        complete: false,
-        percent: null,
         detail: assignment?._cpt_error || "Assignment data unavailable."
-      };
+      });
     }
 
     if (!submission || submission._cpt_error || submission._cpt_unavailable) {
-  return {
-    id: item.id,
-    title,
-    type: item.type || "Unknown",
-    status: "waiting",
-    complete: false,
-    percent: null,
-    detail: "Submission data unavailable for this view."
-  };
-}
+      return createStatusResult({
+        item,
+        title,
+        status: "waiting",
+        detail: "Submission data unavailable for this view."
+      });
+    }
 
     const workflow = String(submission.workflow_state || "").toLowerCase();
     const submittedAt = submission.submitted_at;
