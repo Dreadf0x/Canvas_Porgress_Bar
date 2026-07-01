@@ -5,7 +5,7 @@ const { execFileSync } = require("child_process");
 
 const DIST = "dist";
 const RELEASE = "release";
-const ZIP_NAME = "Canvas_Progress_Bar.zip";
+const ZIP_NAME = "Canvas_Progress_Tracker.zip";
 const ZIP_PATH = path.join(RELEASE, ZIP_NAME);
 
 fs.rmSync(DIST, { recursive: true, force: true });

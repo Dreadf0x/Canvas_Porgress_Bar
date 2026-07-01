@@ -30,10 +30,9 @@ export async function loadUiState(courseId) {
   return (await storageGet(getUiStorageKey(courseId))) || {};
 }
 
-export async function saveUiState(courseId, collapsed) {
+export async function saveUiState(courseId, uiState) {
   await storageSet({
-    [getUiStorageKey(courseId)]: {
-      collapsed
-    }
+    [getUiStorageKey(courseId)]: uiState
   });
-}// Chrome storage helpers will move here during refactor.
+}
+

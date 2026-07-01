@@ -21,6 +21,11 @@ import {
   renderModule,
   renderTracker
 } from "./ui/panel.js";
+import { applyTheme, THEMES } from "./themes/themes.js";
+
+
+
+
 export function initializeApp() {
   "use strict";
 
@@ -37,6 +42,7 @@ export function initializeApp() {
     rules: {},
     showSettingsForModuleId: null,
     collapsed: false,
+    theme: THEMES.ubtech,
     role: "student"
   };
 
@@ -76,7 +82,9 @@ export function initializeApp() {
       escapeHtml,
       bindEvents,
       debugMode: DEBUG_MODE,
-      passingPercent: PASSING_PERCENT
+      passingPercent: PASSING_PERCENT,
+      theme: appState.theme,
+      themes: THEMES
     });
   }
 
@@ -107,7 +115,10 @@ export function initializeApp() {
     tabId: TAB_ID,
     onOpen: async () => {
       appState.collapsed = false;
-      await saveUiState(appState.courseId, appState.collapsed);
+      await saveUiState(appState.courseId, {
+        collapsed: appState.collapsed,
+        theme: appState.theme
+      });
       await reloadDataAndRender();
     }
   });
@@ -117,7 +128,10 @@ export function initializeApp() {
     document.getElementById("cpt-refresh")?.addEventListener("click", init);
     document.getElementById("cpt-collapse")?.addEventListener("click", async () => {
       appState.collapsed = true;
-      await saveUiState(appState.courseId, appState.collapsed);
+      await saveUiState(appState.courseId, {
+        collapsed: appState.collapsed,
+        theme: appState.theme
+      });
       removeExistingUI();
       createCollapsedTab();
     });
@@ -208,7 +222,32 @@ export function initializeApp() {
   
   function bindEvents(wrapper) {
     bindHeaderButtons();
+    const themeButton = wrapper.querySelector("#cpt-theme-button");
+    const themeMenu = wrapper.querySelector("#cpt-theme-menu");
 
+    themeButton?.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      themeMenu.hidden = !themeMenu.hidden;
+    });
+
+    themeMenu?.querySelectorAll("[data-theme]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        appState.theme = button.dataset.theme;
+        applyTheme(appState.theme);
+        themeMenu.hidden = true;
+
+        await saveUiState(appState.courseId, {
+          collapsed: appState.collapsed,
+          theme: appState.theme
+        });
+
+        rerender();
+      });
+    });
+
+   
+ 
     wrapper.querySelectorAll(".cpt-settings-btn").forEach((button) => {
       button.addEventListener("click", (event) => {
         event.preventDefault();
@@ -285,7 +324,11 @@ export function initializeApp() {
     }
 
     appState.courseId = courseId;
+    applyTheme(THEMES.ubtech);
     const uiState = await loadUiState(courseId);
+    appState.collapsed = Boolean(uiState.collapsed);
+    appState.theme = uiState.theme || THEMES.ubtech;
+    applyTheme(appState.theme);
     appState.collapsed = Boolean(uiState.collapsed);
 
     const wrapper = createShell();

@@ -91,7 +91,9 @@ export function renderTracker({
   escapeHtml,
   bindEvents,
   debugMode,
-  passingPercent
+  passingPercent,
+  theme,
+  themes
 }) {
   if (!wrapper) return;
 
@@ -147,12 +149,27 @@ export function renderTracker({
       : "";
 
   wrapper.innerHTML = `
-    <div class="cpt-header">
+   <div class="cpt-header">
+    <div class="cpt-header-title">
+      <div class="cpt-header-icon">▮▮▮</div>
       <div>
         <strong>Module Progress</strong>
         <span>${isInstructor ? "Instructor" : "Student"} View · ${passingPercent}%+</span>
       </div>
-      <div class="cpt-header-actions">
+    </div>
+  <div class="cpt-header-actions">
+        <button id="cpt-theme-button" type="button" title="Theme">
+          🎨
+        </button>
+        <div id="cpt-theme-menu" class="cpt-theme-menu" hidden>
+          <button type="button" data-theme="default">Default</button>
+          <button type="button" data-theme="ubtech">UBTech</button>
+          <button type="button" data-theme="slate">Slate</button>
+          <button type="button" data-theme="forest">Forest</button>
+          <button type="button" data-theme="dark">Dark</button>
+          <button type="button" data-theme="midnight">Midnight</button>
+          <button type="button" data-theme="highcontrast">High Contrast</button>
+        </div>
         <button id="cpt-collapse" type="button" title="Collapse panel">–</button>
         <button id="cpt-refresh" type="button" title="Refresh progress">↻</button>
       </div>
