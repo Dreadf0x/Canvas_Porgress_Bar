@@ -198,6 +198,29 @@ export function initializeApp() {
     };
   }
 
+
+  function createStatusResult({
+    item,
+    title,
+    status,
+    complete = false,
+    percent = null,
+    detail = "",
+    score = null,
+    pointsPossible = null
+  }) {
+    return {
+        id: item.id,
+        title,
+        type: item.type || "Unknown",
+        status,
+        complete,
+        percent,
+        score,
+        pointsPossible,
+        detail
+    };
+  }
   function analyzeItem(item, data) {
     const title = cleanText(item.title || "Untitled item");
     const assignmentId = getAssignmentIdFromModuleItem(item);
