@@ -286,22 +286,23 @@ button:hover {
 }
 
 .cpt-bar {
-  height: 18px;
-  border: 2px solid var(--cpt-border);
+  height: 20px;
+  border: 1px solid var(--cpt-border);
   border-radius: 999px;
   overflow: hidden;
-  background: var(--cpt-bg);
+  background: color-mix(in srgb, var(--cpt-panel) 70%, var(--cpt-bg));
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.12);
 }
 
 .cpt-bar-fill {
   height: 100%;
-  background: repeating-linear-gradient(
-    45deg,
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
     var(--cpt-accent),
-    var(--cpt-accent) 8px,
-    var(--cpt-accent-hover) 8px,
-    var(--cpt-accent-hover) 16px
+    var(--cpt-accent-hover)
   );
+  transition: width 0.35s ease;
 }
 
 .cpt-status {
