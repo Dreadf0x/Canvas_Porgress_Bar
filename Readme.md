@@ -1,3 +1,11 @@
+Current Status
+
+Version: Pre-1.0
+
+Currently in UI Polish Sprint.
+
+
+
 # Canvas Progress Tracker
 
 A modern Chrome extension that enhances Canvas LMS by providing visual progress tracking for required module items, instructor-configurable completion rules, and a streamlined progress dashboard.

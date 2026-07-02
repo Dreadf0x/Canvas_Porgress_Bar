@@ -153,13 +153,14 @@ export function renderTracker({
     <div class="cpt-header-title">
       <div class="cpt-header-icon">▮▮▮</div>
       <div>
-        <strong>Module Progress</strong>
+        <h2>Wayfinder</h2>
+        <strong>Course Progress Tracker</strong>
         <span>${isInstructor ? "Instructor" : "Student"} View · ${passingPercent}%+</span>
       </div>
     </div>
   <div class="cpt-header-actions">
-        <button id="cpt-theme-button" type="button" title="Theme">
-          🎨
+        <button id="cpt-theme-button" type="button" title="Appearance">
+          ⚙
         </button>
         <div id="cpt-theme-menu" class="cpt-theme-menu" hidden>
           <button type="button" data-theme="default">Default</button>
