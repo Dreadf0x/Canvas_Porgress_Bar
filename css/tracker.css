@@ -12,6 +12,17 @@
   --cpt-danger: #c62828;
 }
 
+/* ========================================= */
+/* Header Text Overrides */
+/* ========================================= */
+
+html[data-cpt-theme="slate"],
+html[data-cpt-theme="forest"],
+html[data-cpt-theme="highcontrast"] {
+    --cpt-header-text: var(--cpt-text);
+    --cpt-header-muted: var(--cpt-text-muted);
+}
+
 html[data-cpt-theme="ubtech"] {
   --cpt-bg: #ffffff;
   --cpt-panel: #f5f5f5;
@@ -622,7 +633,7 @@ html[data-cpt-theme="forest"] {
     font-size: 32px;
     font-weight: 700;
     line-height: 1;
-    color: #ffffff;
+    color: var(--cpt-header-text, #ffffff);
 }
 
 .cpt-header-title strong {
@@ -630,7 +641,7 @@ html[data-cpt-theme="forest"] {
   margin-top: 5px;
   font-size: 13px;
   line-height: 1.2;
-  color: #ffffff;
+  color: var(--cpt-header-text, #ffffff);
 }
 
 .cpt-header-title span {
@@ -639,7 +650,7 @@ html[data-cpt-theme="forest"] {
   font-size: 11px;
   line-height: 1.2;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--cpt-header-muted, rgba(255, 255, 255, 0.9));
 }
 
 
