@@ -664,7 +664,7 @@ html[data-cpt-theme="forest"] {
   background: rgba(255,255,255,.24);
   border: 1px solid rgba(255,255,255,.28);
   backdrop-filter: blur(6px);
-  color: #ffffff;
+  color: var(--cpt-header-text, #ffffff);
   display: flex;
   align-items: center;
   justify-content: center;
