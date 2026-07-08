@@ -11,8 +11,8 @@ export function getStatusInfo(item) {
       return { icon: "…", label: "Waiting for grade", className: "cpt-item-waiting" };
     case "missing":
       return { icon: "○", label: "Missing", className: "cpt-item-incomplete" };
-    case "not_scorable":
-      return { icon: "?", label: "Not scorable", className: "cpt-item-muted" };
+    case "info_only":
+      return { icon: "i", label: "Info only", className: "cpt-item-muted" };
     default:
       return { icon: "!", label: "Error", className: "cpt-item-error" };
   }

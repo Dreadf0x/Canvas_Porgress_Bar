@@ -161,6 +161,8 @@ export function initializeApp() {
     await Promise.all(modules.map(async (module) => {
       moduleItemsByModuleId[module.id] =
         await canvasFetchAll(`/api/v1/courses/${courseId}/modules/${module.id}/items?per_page=100`);
+
+        console.log("Wayfinder module item sample:", module.name, moduleItemsByModuleId[module.id]);
     }));
 
     const requiredItems = modules.flatMap((module) =>

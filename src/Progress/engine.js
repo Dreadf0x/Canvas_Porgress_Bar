@@ -77,13 +77,14 @@ export function analyzeItem(item, data, passingPercent) {
   const assignmentId = getAssignmentIdFromModuleItem(item);
 
   if (!assignmentId) {
-    return createStatusResult({
-      item,
-      title,
-      status: "not_scorable",
-      detail: "Required, but no assignment ID was available."
-    });
-  }
+  return createStatusResult({
+    item,
+    title,
+    status: "info_only",
+    complete: false,
+    detail: "Shown in tracker, but not counted toward progress."
+  });
+}
 
   const assignment = data.assignmentMap.get(Number(assignmentId));
   const submission = data.submissionMap.get(Number(assignmentId));
@@ -172,8 +173,9 @@ export function analyzeModules(data, rules, requiredKeywords, passingPercent) {
       analyzeItem(item, data, passingPercent)
     );
 
-    const total = analyzedItems.length;
-    const complete = analyzedItems.filter((item) => item.complete).length;
+    const progressItems = analyzedItems.filter((item) => item.status !== "info_only");
+    const total = progressItems.length;
+    const complete = progressItems.filter((item) => item.complete).length;
     const percent = total === 0 ? 0 : Math.round((complete / total) * 100);
     const rule = rules[String(module.id)] || null;
 
