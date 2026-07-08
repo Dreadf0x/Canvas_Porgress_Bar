@@ -5,9 +5,9 @@
   "description": "Course progress tracker for Canvas LMS.",
 
     "icons": {
-    "16": "assets/icons/icon16.png",
-    "48": "assets/icons/icon48.png",
-    "128": "assets/icons/icon128.png"
+    "16": "assets/branding/icon16.png",
+    "48": "assets/branding/icon48.png",
+    "128": "assets/b/icon128.png"
   },
 
   "permissions": [
