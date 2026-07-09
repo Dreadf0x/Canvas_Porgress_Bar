@@ -33,7 +33,8 @@
   "content_scripts": [
     {
       "matches": [
-        "https://ubtech.instructure.com/courses/*/modules*"
+        "https://ubtech.instructure.com/courses/*/modules*",
+        "https://ubtech.instructure.com/courses/*/users*"
       ],
       "js": [
         "content.js"
