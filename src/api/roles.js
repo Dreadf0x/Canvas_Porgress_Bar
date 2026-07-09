@@ -8,8 +8,7 @@ export function detectRoleFromPermissions(course) {
     permissions.manage_assignments,
     permissions.manage_grades,
     permissions.manage_students,
-    permissions.update,
-    permissions.create_discussion_topic
+    permissions.update
   ];
 
   const instructorEnrollment = enrollmentTypes.some((type) =>
@@ -21,4 +20,4 @@ export function detectRoleFromPermissions(course) {
   return instructorSignals.some(Boolean) || instructorEnrollment
     ? "instructor"
     : "student";
-}// Role and capability detection will move here during refactor.
+}
