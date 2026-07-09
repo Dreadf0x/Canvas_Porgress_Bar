@@ -27,6 +27,14 @@ import { applyTheme, THEMES, getTheme } from "./themes/themes.js";
 export function initializeApp() {
   "use strict";
 
+  const isPeoplePage = /\/courses\/\d+\/users/.test(window.location.pathname);
+
+  if (isPeoplePage) {
+    console.log("Wayfinder People page detected.");
+    return;
+  }
+
+
   const EXTENSION_ID = "cpt-progress-tracker";
   const TAB_ID = "cpt-progress-tab";
   const PASSING_PERCENT = 80;
