@@ -1,3 +1,5 @@
+
+import { initializePeopleView } from "./people/peopleApp.js";
 import {
   createShell as createShellUi,
   createCollapsedTab as createCollapsedTabUi,
@@ -30,9 +32,8 @@ export function initializeApp() {
   const isPeoplePage = /\/courses\/\d+\/users/.test(window.location.pathname);
 
   if (isPeoplePage) {
-   console.log("Wayfinder People page detected.");
-    showLoading("Wayfinder People View loading...");
-    return;
+      initializePeopleView();
+      return;
   }
 
 

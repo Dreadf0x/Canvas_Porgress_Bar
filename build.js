@@ -24,6 +24,15 @@ if (fs.existsSync("assets")) {
   fs.cpSync("assets", path.join(DIST, "assets"), { recursive: true });
 }
 
+const radarCssSource = path.join("src", "people", "radar.css");
+const radarCssDestDir = path.join(DIST, "people");
+
+if (fs.existsSync(radarCssSource)) {
+  fs.mkdirSync(radarCssDestDir, { recursive: true });
+  fs.copyFileSync(radarCssSource, path.join(radarCssDestDir, "radar.css"));
+}
+
+
 esbuild
   .build({
     entryPoints: ["src/content/content.js"],

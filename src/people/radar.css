@@ -1,0 +1,206 @@
+/* ===========================
+   Wayfinder Student Radar
+=========================== */
+
+
+
+.cpt-student-radar {
+  background: var(--cpt-bg);
+  color: var(--cpt-text);
+}
+
+.cpt-radar-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.cpt-radar-table th,
+.cpt-radar-table td {
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--cpt-border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.cpt-radar-table th {
+  font-size: 11px;
+  font-weight: 900;
+  color: var(--cpt-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cpt-radar-table tbody tr:hover {
+  background: var(--cpt-panel);
+}
+
+.cpt-radar-table td {
+  color: var(--cpt-text);
+}
+
+.cpt-radar-table td:first-child {
+  width: 38%;
+  font-weight: 700;
+}
+
+.cpt-radar-table th:nth-child(2),
+.cpt-radar-table td:nth-child(2),
+.cpt-radar-table th:nth-child(3),
+.cpt-radar-table td:nth-child(3) {
+  width: 16%;
+}
+
+.cpt-radar-table th:nth-child(4),
+.cpt-radar-table td:nth-child(4) {
+  width: 18%;
+}
+
+.cpt-radar-table th:nth-child(5),
+.cpt-radar-table td:nth-child(5) {
+  width: 12%;
+}
+
+.cpt-radar-table {
+  table-layout: fixed;
+}
+
+.cpt-radar-table th,
+.cpt-radar-table td {
+  white-space: normal;
+}
+
+.cpt-radar-table th:nth-child(1),
+.cpt-radar-table td:nth-child(1) {
+  width: 38%;
+}
+
+.cpt-radar-table th:nth-child(2),
+.cpt-radar-table td:nth-child(2),
+.cpt-radar-table th:nth-child(3),
+.cpt-radar-table td:nth-child(3) {
+  width: 17%;
+  text-align: center;
+}
+
+.cpt-radar-table th:nth-child(4),
+.cpt-radar-table td:nth-child(4) {
+  width: 18%;
+  text-align: center;
+}
+
+.cpt-radar-table th:nth-child(5),
+.cpt-radar-table td:nth-child(5) {
+  width: 10%;
+  text-align: center;
+}
+
+
+
+.cpt-radar-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+
+/* Student Radar panel size */
+#cpt-progress-tracker:has(.cpt-student-radar) {
+    width: min(1200px, 72vw);
+    max-width: calc(100vw - 32px);
+    min-width: 900px;
+}
+
+.cpt-radar-table-wrap {
+  max-height: 420px;
+  overflow-y: auto;
+  border: 1px solid var(--cpt-border);
+  border-radius: 12px;
+}
+
+.cpt-radar-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--cpt-panel-secondary);
+  z-index: 1;
+}
+
+/* Force Student Radar panel width */
+body #cpt-progress-tracker:has(.cpt-student-radar) {
+  width: min(1200px, 72vw) !important;
+  max-width: calc(100vw - 32px) !important;
+  min-width: 900px !important;
+}
+
+.cpt-activity-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 11px;
+  border: 1px solid transparent;
+}
+
+.cpt-activity-icon {
+  font-weight: 900;
+}
+
+.cpt-activity-recent {
+  background: #dbeafe;
+  color: #1e40af;
+  border-color: #93c5fd;
+}
+
+.cpt-activity-watch {
+  background: #fef3c7;
+  color: #78350f;
+  border-color: #f59e0b;
+}
+
+.cpt-activity-inactive {
+  background: #f3f4f6;
+  color: #111827;
+  border-color: #9ca3af;
+}
+
+.cpt-end-date {
+  width: 130px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--cpt-text);
+  font: inherit;
+  padding: 6px 8px;
+  border-radius: 8px;
+}
+
+.cpt-end-date:hover {
+  border-color: var(--cpt-border);
+  background: var(--cpt-panel-secondary);
+}
+
+.cpt-end-date:focus {
+  outline: 2px solid var(--cpt-accent);
+  outline-offset: 2px;
+  border-color: var(--cpt-accent);
+  background: var(--cpt-panel-secondary);
+}
+
+.cpt-radar-table input.cpt-end-date {
+  width: 120px !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--cpt-text) !important;
+  font: inherit !important;
+  padding: 4px 6px !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+
+.cpt-radar-table input.cpt-end-date:hover,
+.cpt-radar-table input.cpt-end-date:focus {
+  border: 1px solid var(--cpt-border) !important;
+  background: var(--cpt-panel-secondary) !important;
+  outline: none !important;
+}

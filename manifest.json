@@ -22,7 +22,8 @@
     {
       "resources": [
         "assets/branding/Wayfinder_White.svg",
-        "assets/branding/Wayfinder_Dark.svg"
+        "assets/branding/Wayfinder_Dark.svg",
+        "people/radar.css"
       ],
       "matches": [
         "https://ubtech.instructure.com/*"
