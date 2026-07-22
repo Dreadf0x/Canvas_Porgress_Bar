@@ -7,6 +7,10 @@ import {
 import { renderStudentRadar } from "./peopleRenderer.js";
 
 
+
+import { loadUiState } from "../storage/rules.js";
+import { applyTheme, getTheme } from "../themes/themes.js";
+
 import { initializeRadarTooltips } from "./radarTooltips.js";
 
 import {
@@ -526,6 +530,94 @@ function createRadarCollapsedTab(courseId) {
   document.body.appendChild(tab);
 }
 
+function bindRadarThemeMenu({
+  panel,
+  courseId
+}) {
+  const themeButton = panel.querySelector(
+    "#cpt-theme-button"
+  );
+
+  const themeMenu = panel.querySelector(
+    "#cpt-theme-menu"
+  );
+
+  if (!themeButton || !themeMenu) {
+    return;
+  }
+
+  themeButton.addEventListener(
+    "click",
+    (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const willOpen = themeMenu.hidden;
+
+      themeMenu.hidden = !willOpen;
+
+      themeButton.setAttribute(
+        "aria-expanded",
+        String(willOpen)
+      );
+    }
+  );
+
+  themeMenu
+    .querySelectorAll("[data-theme]")
+    .forEach((button) => {
+      button.addEventListener(
+        "click",
+        async () => {
+          const themeId = getTheme(
+            button.dataset.theme
+          ).id;
+
+          applyTheme(themeId);
+
+          themeMenu.hidden = true;
+
+          themeButton.setAttribute(
+            "aria-expanded",
+            "false"
+          );
+
+          /*
+           * Preserve the main Wayfinder UI settings while
+           * changing only the shared course theme.
+           */
+          const currentUiState =
+            await loadUiState(courseId);
+
+          await saveUiState(courseId, {
+            ...currentUiState,
+            theme: themeId
+          });
+        }
+      );
+    });
+
+  document.addEventListener(
+    "click",
+    (event) => {
+      if (
+        themeMenu.hidden ||
+        themeMenu.contains(event.target) ||
+        themeButton.contains(event.target)
+      ) {
+        return;
+      }
+
+      themeMenu.hidden = true;
+
+      themeButton.setAttribute(
+        "aria-expanded",
+        "false"
+      );
+    }
+  );
+}
+
 function bindRadarCollapseButton({
   panel,
   courseId
@@ -566,6 +658,18 @@ export async function initializePeopleView() {
   if (!courseId) {
     return;
   }
+
+  /*
+  * Use the same course theme selected in the main
+  * Wayfinder module-progress panel.
+  */
+  const wayfinderUiState =
+    await loadUiState(courseId);
+
+  const activeTheme =
+    getTheme(wayfinderUiState.theme);
+
+  applyTheme(activeTheme.id);
 
   removeRadarUi();
 
@@ -795,6 +899,11 @@ export async function initializePeopleView() {
     });
 
     bindRadarCollapseButton({
+      panel,
+      courseId
+    });
+
+    bindRadarThemeMenu({
       panel,
       courseId
     });

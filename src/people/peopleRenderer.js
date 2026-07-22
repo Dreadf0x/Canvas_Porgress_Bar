@@ -36,9 +36,63 @@ export function renderStudentRadar({
                 type="button"
                 id="cpt-radar-required-button"
                 class="cpt-radar-required-button"
+                title="Choose required items"
               >
-                Required Items (${selectedAssignmentIds.length})
+                <span
+                  class="cpt-radar-required-icon"
+                  aria-hidden="true"
+                >
+                  ✓
+                </span>
+
+                <span class="cpt-radar-required-label">
+                  Required Items
+                </span>
+
+                <span class="cpt-radar-required-count">
+                  ${selectedAssignmentIds.length}
+                </span>
               </button>
+
+              <button
+                id="cpt-theme-button"
+                type="button"
+                title="Appearance"
+                aria-label="Choose Wayfinder theme"
+                aria-expanded="false"
+              >
+                ⚙
+              </button>
+
+              <div
+                id="cpt-theme-menu"
+                class="cpt-theme-menu"
+                hidden
+              >
+                <button type="button" data-theme="ubtech">
+                  UBTech
+                </button>
+
+                <button type="button" data-theme="slate">
+                  Slate
+                </button>
+
+                <button type="button" data-theme="forest">
+                  Forest
+                </button>
+
+                <button type="button" data-theme="dark">
+                  Dark
+                </button>
+
+                <button type="button" data-theme="midnight">
+                  Midnight
+                </button>
+
+                <button type="button" data-theme="highcontrast">
+                  High Contrast
+                </button>
+              </div>
 
               <button
                 type="button"

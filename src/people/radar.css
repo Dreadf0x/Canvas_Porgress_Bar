@@ -734,41 +734,300 @@ html:has(#cpt-radar-tooltip-portal[data-visible="true"]:not([hidden]))
   z-index: 2147483600;
 
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 7px;
+  justify-content: center;
+  gap: 10px;
 
-  padding: 12px 9px;
+  width: 46px;
+  min-height: 150px;
+  padding: 12px 6px;
 
   border: 1px solid var(--cpt-border, #d1d5db);
   border-right: 0;
-  border-radius: 10px 0 0 10px;
+  border-radius: 12px 0 0 12px;
 
   background: var(--cpt-panel-secondary, #ffffff);
   color: var(--cpt-text, #111827);
 
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
 
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1;
+
+  cursor: pointer;
+
+  transform: translateY(-50%);
+
+  transition:
+    width 120ms ease,
+    background 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+#cpt-radar-collapsed-tab:hover {
+  width: 52px;
+
+  border-color: var(--cpt-accent, #2563eb);
+  background: var(--cpt-panel, #f8fafc);
+
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+}
+
+#cpt-radar-collapsed-tab:focus-visible {
+  outline: 3px solid var(--cpt-accent, #2563eb);
+  outline-offset: 3px;
+}
+
+.cpt-radar-collapsed-tab-text {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+
+  color: var(--cpt-text, #111827);
+
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  line-height: 1.1;
+}
+
+.cpt-radar-collapsed-tab-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 26px;
+  height: 26px;
+
+  border-radius: 999px;
+
+  background: var(--cpt-accent, #2563eb);
+  color: #ffffff;
+
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+
+/* ===========================
+   Student Radar Header Actions
+=========================== */
+
+.cpt-radar-heading-actions {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cpt-radar-required-button {
+  min-height: 38px;
+  padding: 6px 8px 6px 10px;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+
+  border: 1px solid var(--cpt-border);
+  border-radius: 10px;
+
+  background: var(--cpt-panel-secondary);
+  color: var(--cpt-text);
+
+  font: inherit;
   font-size: 12px;
   font-weight: 800;
   line-height: 1;
 
   cursor: pointer;
 
-  transform: translateY(-50%);
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.18),
+    0 2px 5px rgba(0, 0, 0, 0.12);
+
+  transition:
+    border-color 120ms ease,
+    background 120ms ease,
+    transform 120ms ease,
+    box-shadow 120ms ease;
 }
 
-#cpt-radar-collapsed-tab:hover {
-  border-color: var(--cpt-accent, #2563eb);
-  background: var(--cpt-panel, #f8fafc);
+.cpt-radar-required-button:hover {
+  border-color: var(--cpt-accent);
+  background: var(--cpt-panel);
+  transform: translateY(-1px);
+
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.2),
+    0 4px 9px rgba(0, 0, 0, 0.16);
 }
 
-.cpt-radar-collapsed-tab-text {
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
-  letter-spacing: 0.04em;
+.cpt-radar-required-button:active {
+  transform: translateY(0);
 }
 
-.cpt-radar-collapsed-tab-arrow {
-  font-size: 20px;
-  line-height: 1;
+.cpt-radar-required-button:focus-visible {
+  outline: 2px solid var(--cpt-accent);
+  outline-offset: 2px;
+}
+
+.cpt-radar-required-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 20px;
+  height: 20px;
+
+  border-radius: 6px;
+
+  background: var(--cpt-accent);
+  color: #ffffff;
+
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.cpt-radar-required-label {
+  white-space: nowrap;
+}
+
+.cpt-radar-required-count {
+  min-width: 24px;
+  height: 22px;
+  padding: 0 7px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 999px;
+
+  background: var(--cpt-panel);
+  color: var(--cpt-text);
+
+  font-size: 11px;
+  font-weight: 900;
+}
+
+/* ===========================
+   Student Radar Themed Header
+=========================== */
+
+/*
+ * Use normal panel colors for every theme by default.
+ * UBTech receives its orange header in the theme-specific
+ * rules below.
+ */
+.cpt-student-radar .cpt-module-topline {
+  padding: 14px 18px;
+
+  background: var(--cpt-panel-secondary);
+  color: var(--cpt-text);
+
+  border-bottom: 1px solid var(--cpt-border);
+  border-radius: 12px 12px 0 0;
+}
+
+.cpt-student-radar .cpt-module-title {
+  color: var(--cpt-text);
+}
+
+/*
+ * Only UBTech uses the orange Wayfinder header.
+ */
+html[data-cpt-theme="ubtech"]
+  .cpt-student-radar
+  .cpt-module-topline {
+  background: var(--cpt-accent);
+  color: #ffffff;
+  border-bottom-color: var(--cpt-accent);
+}
+
+html[data-cpt-theme="ubtech"]
+  .cpt-student-radar
+  .cpt-module-title {
+  color: #ffffff;
+}
+
+/*
+ * Style only the buttons that are direct children of the
+ * header-actions container. This avoids changing the buttons
+ * inside the theme dropdown.
+ */
+.cpt-student-radar
+  .cpt-radar-heading-actions
+  > button {
+  background: var(--cpt-panel-secondary);
+  color: var(--cpt-text);
+  border-color: var(--cpt-border);
+}
+
+.cpt-student-radar
+  .cpt-radar-heading-actions
+  > button:hover {
+  background: var(--cpt-panel);
+  color: var(--cpt-text);
+  border-color: var(--cpt-accent);
+}
+
+/*
+ * UBTech header buttons use a translucent white treatment
+ * against the orange header.
+ */
+html[data-cpt-theme="ubtech"]
+  .cpt-student-radar
+  .cpt-radar-heading-actions
+  > button {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.34);
+}
+
+html[data-cpt-theme="ubtech"]
+  .cpt-student-radar
+  .cpt-radar-heading-actions
+  > button:hover {
+  background: rgba(255, 255, 255, 0.30);
+  color: #ffffff;
+  border-color: #ffffff;
+}
+
+/*
+ * Keep the Required Items count readable in every theme.
+ */
+.cpt-student-radar .cpt-radar-required-count {
+  background: var(--cpt-panel);
+  color: var(--cpt-text);
+}
+
+html[data-cpt-theme="ubtech"]
+  .cpt-student-radar
+  .cpt-radar-required-count {
+  background: #ffffff;
+  color: #1f2937;
+}
+
+/*
+ * Theme dropdown always uses normal menu colors and is not
+ * affected by the header-button rules above.
+ */
+.cpt-student-radar #cpt-theme-menu {
+  background: var(--cpt-panel-secondary);
+  color: var(--cpt-text);
+  border: 1px solid var(--cpt-border);
+}
+
+.cpt-student-radar #cpt-theme-menu button {
+  background: transparent;
+  color: var(--cpt-text);
+  border: 0;
+}
+
+.cpt-student-radar #cpt-theme-menu button:hover {
+  background: var(--cpt-panel);
+  color: var(--cpt-text);
 }
