@@ -1,5 +1,3 @@
-const DAY_MS = 1000 * 60 * 60 * 24;
-
 function escapeHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -49,7 +47,11 @@ function parseLocalDate(value) {
 
 function addDays(date, numberOfDays) {
   const result = new Date(date);
-  result.setDate(result.getDate() + numberOfDays);
+
+  result.setDate(
+    result.getDate() + numberOfDays
+  );
+
   return result;
 }
 
@@ -91,7 +93,10 @@ function parseModuleHours(moduleName) {
     : null;
 }
 
-function createScheduleWeeks(startDate, endDate) {
+function createScheduleWeeks(
+  startDate,
+  endDate
+) {
   const weeks = [];
   let weekStart = new Date(startDate);
 
@@ -99,8 +104,8 @@ function createScheduleWeeks(startDate, endDate) {
     const dayOfWeek = weekStart.getDay();
 
     /*
-     * The first week starts today and ends Sunday.
-     * Following weeks run Monday through Sunday.
+     * The first week begins today and ends Sunday.
+     * Later weeks run Monday through Sunday.
      */
     const daysUntilSunday =
       dayOfWeek === 0
@@ -121,7 +126,8 @@ function createScheduleWeeks(startDate, endDate) {
       endDate: new Date(weekEnd),
       items: [],
       estimatedHours: 0,
-      unknownHourItems: 0
+      unknownHourItems: 0,
+      scheduleWeight: 0
     });
 
     weekStart = addDays(weekEnd, 1);
@@ -130,22 +136,28 @@ function createScheduleWeeks(startDate, endDate) {
   return weeks;
 }
 
-function buildModuleStats(assignments = []) {
+function buildModuleStats(
+  assignments = []
+) {
   const stats = new Map();
 
   for (const assignment of assignments) {
     const moduleName =
-      assignment.moduleName || "Other Required Items";
+      assignment.moduleName ||
+      "Other Required Items";
 
     if (!stats.has(moduleName)) {
       stats.set(moduleName, {
         moduleName,
         totalRequiredItems: 0,
-        moduleHours: parseModuleHours(moduleName)
+        moduleHours:
+          parseModuleHours(moduleName)
       });
     }
 
-    stats.get(moduleName).totalRequiredItems += 1;
+    stats.get(
+      moduleName
+    ).totalRequiredItems += 1;
   }
 
   return stats;
@@ -160,16 +172,25 @@ function addWeightsToMissingItems({
 
   return missingItems.map((item) => {
     const moduleName =
-      item.moduleName || "Other Required Items";
+      item.moduleName ||
+      "Other Required Items";
 
-    const stats = moduleStats.get(moduleName);
+    const stats =
+      moduleStats.get(moduleName);
 
     const moduleHours =
-      stats?.moduleHours ?? parseModuleHours(moduleName);
+      stats?.moduleHours ??
+      parseModuleHours(moduleName);
 
     const totalRequiredItems =
       stats?.totalRequiredItems || 1;
 
+    /*
+     * A module's stated hours represent its complete
+     * workload. Divide those hours across all selected
+     * required items in that module, then schedule only
+     * the portion represented by unsubmitted items.
+     */
     const estimatedHours =
       moduleHours !== null
         ? moduleHours / totalRequiredItems
@@ -179,6 +200,12 @@ function addWeightsToMissingItems({
       ...item,
       moduleName,
       estimatedHours,
+
+      /*
+       * Items without an hour estimate still need weight
+       * so they are spread through the plan rather than
+       * being gathered into one week.
+       */
       scheduleWeight:
         estimatedHours !== null
           ? estimatedHours
@@ -187,101 +214,267 @@ function addWeightsToMissingItems({
   });
 }
 
+function getRangeWeight(
+  prefixWeights,
+  startIndex,
+  endIndex
+) {
+  return (
+    prefixWeights[endIndex] -
+    prefixWeights[startIndex]
+  );
+}
+
+/*
+ * Divide an ordered list into contiguous weekly groups.
+ *
+ * This uses dynamic programming to find the division that
+ * keeps every week as close as possible to the average
+ * workload while preserving assignment/module order.
+ */
+function createBalancedPartitions(
+  weightedItems,
+  requestedPartitionCount
+) {
+  const itemCount = weightedItems.length;
+
+  if (!itemCount) {
+    return [];
+  }
+
+  const partitionCount = Math.min(
+    requestedPartitionCount,
+    itemCount
+  );
+
+  const prefixWeights =
+    new Array(itemCount + 1).fill(0);
+
+  for (
+    let index = 0;
+    index < itemCount;
+    index += 1
+  ) {
+    prefixWeights[index + 1] =
+      prefixWeights[index] +
+      weightedItems[index].scheduleWeight;
+  }
+
+  const totalWeight =
+    prefixWeights[itemCount];
+
+  const targetWeight =
+    totalWeight / partitionCount;
+
+  /*
+   * costs[groupCount][itemCountUsed]
+   *
+   * Stores the lowest total squared difference from
+   * the target weekly workload.
+   */
+  const costs = Array.from(
+    { length: partitionCount + 1 },
+    () =>
+      new Array(itemCount + 1).fill(
+        Number.POSITIVE_INFINITY
+      )
+  );
+
+  const previousBreak = Array.from(
+    { length: partitionCount + 1 },
+    () =>
+      new Array(itemCount + 1).fill(-1)
+  );
+
+  costs[0][0] = 0;
+
+  for (
+    let groupCount = 1;
+    groupCount <= partitionCount;
+    groupCount += 1
+  ) {
+    /*
+     * At least groupCount items are needed because
+     * every created group contains at least one item.
+     */
+    for (
+      let itemsUsed = groupCount;
+      itemsUsed <= itemCount;
+      itemsUsed += 1
+    ) {
+      const minimumPreviousItems =
+        groupCount - 1;
+
+      const maximumPreviousItems =
+        itemsUsed - 1;
+
+      for (
+        let splitIndex =
+          minimumPreviousItems;
+        splitIndex <=
+          maximumPreviousItems;
+        splitIndex += 1
+      ) {
+        const previousCost =
+          costs[groupCount - 1][
+            splitIndex
+          ];
+
+        if (
+          !Number.isFinite(previousCost)
+        ) {
+          continue;
+        }
+
+        const groupWeight =
+          getRangeWeight(
+            prefixWeights,
+            splitIndex,
+            itemsUsed
+          );
+
+        const difference =
+          groupWeight - targetWeight;
+
+        const groupCost =
+          difference * difference;
+
+        const candidateCost =
+          previousCost + groupCost;
+
+        if (
+          candidateCost <
+          costs[groupCount][itemsUsed]
+        ) {
+          costs[groupCount][itemsUsed] =
+            candidateCost;
+
+          previousBreak[groupCount][
+            itemsUsed
+          ] = splitIndex;
+        }
+      }
+    }
+  }
+
+  const partitions = [];
+
+  let groupCount = partitionCount;
+  let itemsUsed = itemCount;
+
+  while (groupCount > 0) {
+    const splitIndex =
+      previousBreak[groupCount][
+        itemsUsed
+      ];
+
+    if (splitIndex < 0) {
+      /*
+       * Defensive fallback. This should not occur,
+       * but it prevents a blank plan if the partition
+       * table cannot be reconstructed.
+       */
+      return weightedItems.map(
+        (item) => [item]
+      );
+    }
+
+    partitions.unshift(
+      weightedItems.slice(
+        splitIndex,
+        itemsUsed
+      )
+    );
+
+    itemsUsed = splitIndex;
+    groupCount -= 1;
+  }
+
+  return partitions;
+}
+
+function addItemToWeek(
+  week,
+  item
+) {
+  week.items.push(item);
+
+  week.scheduleWeight +=
+    item.scheduleWeight;
+
+  if (item.estimatedHours !== null) {
+    week.estimatedHours +=
+      item.estimatedHours;
+  } else {
+    week.unknownHourItems += 1;
+  }
+}
+
 function distributeItemsAcrossWeeks(
   weightedItems,
   weeks
 ) {
-  if (!weeks.length) {
+  if (
+    !weeks.length ||
+    !weightedItems.length
+  ) {
     return weeks;
   }
 
-  const totalWeight = weightedItems.reduce(
-    (sum, item) => sum + item.scheduleWeight,
-    0
+  const partitions =
+    createBalancedPartitions(
+      weightedItems,
+      weeks.length
+    );
+
+  /*
+   * If there are more weeks than assignments, work is
+   * placed in the earlier weeks and the remaining weeks
+   * become catch-up/review weeks.
+   */
+  partitions.forEach(
+    (partition, weekIndex) => {
+      const week = weeks[weekIndex];
+
+      if (!week) {
+        return;
+      }
+
+      partition.forEach((item) => {
+        addItemToWeek(week, item);
+      });
+    }
   );
-
-  const targetWeight =
-    totalWeight / weeks.length;
-
-  let weekIndex = 0;
-  let currentWeight = 0;
-
-  weightedItems.forEach((item, itemIndex) => {
-    const currentWeek = weeks[weekIndex];
-
-    const remainingItems =
-      weightedItems.length - itemIndex;
-
-    const remainingWeeks =
-      weeks.length - weekIndex;
-
-    const canMoveForward =
-      weekIndex < weeks.length - 1;
-
-    const shouldMoveForward =
-      canMoveForward &&
-      currentWeek.items.length > 0 &&
-      currentWeight + item.scheduleWeight >
-        targetWeight &&
-      remainingItems >= remainingWeeks;
-
-    if (shouldMoveForward) {
-      weekIndex += 1;
-      currentWeight = 0;
-    }
-
-    const destinationWeek = weeks[weekIndex];
-
-    destinationWeek.items.push(item);
-    currentWeight += item.scheduleWeight;
-
-    if (item.estimatedHours !== null) {
-      destinationWeek.estimatedHours +=
-        item.estimatedHours;
-    } else {
-      destinationWeek.unknownHourItems += 1;
-    }
-  });
 
   return weeks;
 }
 
-function formatWeeklyWorkload(week) {
-  const parts = [];
+function formatWeeklyTaskCount(week) {
+  const itemCount = week.items.length;
 
-  if (week.estimatedHours > 0) {
-    const roundedHours =
-      Math.round(week.estimatedHours * 10) / 10;
-
-    parts.push(
-      `approximately ${roundedHours} hour${
-        roundedHours === 1 ? "" : "s"
-      }`
-    );
+  if (!itemCount) {
+    return "Catch-up and review";
   }
 
-  if (week.unknownHourItems > 0) {
-    parts.push(
-      `${week.unknownHourItems} item${
-        week.unknownHourItems === 1 ? "" : "s"
-      } without module-hour estimates`
-    );
-  }
-
-  return parts.length
-    ? parts.join(" plus ")
-    : "No scheduled work";
+  return `${itemCount} required item${
+    itemCount === 1 ? "" : "s"
+  }`;
 }
+
+ 
+
 
 function groupWeekItemsByModule(items) {
   const groups = [];
 
   for (const item of items) {
-    const lastGroup = groups.at(-1);
+    const lastGroup =
+      groups.at(-1);
 
     if (
       lastGroup &&
-      lastGroup.moduleName === item.moduleName
+      lastGroup.moduleName ===
+        item.moduleName
     ) {
       lastGroup.items.push(item);
     } else {
@@ -297,69 +490,92 @@ function groupWeekItemsByModule(items) {
 
 function renderWeek(week, index) {
   const moduleGroups =
-    groupWeekItemsByModule(week.items);
+    groupWeekItemsByModule(
+      week.items
+    );
 
-  const moduleHtml = moduleGroups.length
-    ? moduleGroups
-        .map(
-          (group) => `
-            <section class="cpt-schedule-module">
-              <h4>
-                ${escapeHtml(group.moduleName)}
-              </h4>
+  const moduleHtml =
+    moduleGroups.length
+      ? moduleGroups
+          .map(
+            (group) => `
+              <section
+                class="cpt-schedule-module"
+                >
+                <h4>
+                    ${escapeHtml(
+                        group.moduleName
+                    )}
+                    </h4>
 
-              <ul class="cpt-schedule-task-list">
-                ${group.items
-                  .map(
-                    (item) => `
-                      <li>
-                        <span
-                          class="cpt-schedule-checkbox"
-                          aria-hidden="true"
-                        ></span>
+                    <p class="cpt-schedule-module-instruction">
+                        Before completing the required items below, complete
+                        all learning materials that appear above them in Canvas.
+                        This schedule lists only the required submissions.
+                    </p>
 
-                        <span>
-                          ${escapeHtml(
-                            item.name ||
-                            "Unnamed required item"
-                          )}
-                        </span>
-                      </li>
-                    `
-                  )
-                  .join("")}
-              </ul>
-            </section>
-          `
-        )
-        .join("")
-    : `
-      <p class="cpt-schedule-empty-week">
-        Catch-up, review, and completion week.
-      </p>
-    `;
+                    <ul
+                    class="cpt-schedule-task-list"
+                    >
+                  ${group.items
+                    .map(
+                      (item) => `
+                        <li>
+                          <span
+                            class="cpt-schedule-checkbox"
+                            aria-hidden="true"
+                          ></span>
+
+                          <span>
+                            ${escapeHtml(
+                              item.name ||
+                              "Unnamed required item"
+                            )}
+                          </span>
+                        </li>
+                      `
+                    )
+                    .join("")}
+                </ul>
+              </section>
+            `
+          )
+          .join("")
+      : `
+        <p
+          class="cpt-schedule-empty-week"
+        >
+          Catch-up, review, and completion week.
+        </p>
+      `;
 
   return `
     <article class="cpt-schedule-week">
-      <div class="cpt-schedule-week-header">
+      <div
+        class="cpt-schedule-week-header"
+      >
         <div>
           <h3>Week ${index + 1}</h3>
 
           <span>
             ${escapeHtml(
-              formatShortDate(week.startDate)
+              formatShortDate(
+                week.startDate
+              )
             )}
             –
             ${escapeHtml(
-              formatShortDate(week.endDate)
+              formatShortDate(
+                week.endDate
+              )
             )}
           </span>
         </div>
 
         <strong>
-          ${escapeHtml(
-            formatWeeklyWorkload(week)
-          )}
+            ${escapeHtml(
+                formatWeeklyTaskCount(week)
+            )}
         </strong>
       </div>
 
@@ -370,7 +586,9 @@ function renderWeek(week, index) {
 
 function removeExistingSchedule() {
   document
-    .querySelector(".cpt-student-schedule-overlay")
+    .querySelector(
+      ".cpt-student-schedule-overlay"
+    )
     ?.remove();
 }
 
@@ -390,7 +608,8 @@ function createModal({
 }) {
   removeExistingSchedule();
 
-  const overlay = document.createElement("div");
+  const overlay =
+    document.createElement("div");
 
   overlay.className =
     "cpt-student-schedule-overlay";
@@ -402,8 +621,12 @@ function createModal({
       aria-modal="true"
       aria-labelledby="cpt-schedule-dialog-title"
     >
-      <header class="cpt-schedule-modal-header">
-        <h2 id="cpt-schedule-dialog-title">
+      <header
+        class="cpt-schedule-modal-header"
+      >
+        <h2
+          id="cpt-schedule-dialog-title"
+        >
           ${escapeHtml(title)}
         </h2>
 
@@ -417,11 +640,15 @@ function createModal({
         </button>
       </header>
 
-      <div class="cpt-schedule-modal-body">
+      <div
+        class="cpt-schedule-modal-body"
+      >
         ${body}
       </div>
 
-      <footer class="cpt-schedule-modal-actions">
+      <footer
+        class="cpt-schedule-modal-actions"
+      >
         ${
           focusEndDateStudentId
             ? `
@@ -461,62 +688,92 @@ function createModal({
     </section>
   `;
 
-  document.body.appendChild(overlay);
+  document.body.appendChild(
+    overlay
+  );
 
   const modal = overlay.querySelector(
     ".cpt-student-schedule-modal"
   );
 
   overlay
-    .querySelector(".cpt-schedule-close")
-    ?.addEventListener("click", closeSchedule);
+    .querySelector(
+      ".cpt-schedule-close"
+    )
+    ?.addEventListener(
+      "click",
+      closeSchedule
+    );
 
   overlay
-    .querySelector(".cpt-schedule-cancel")
-    ?.addEventListener("click", closeSchedule);
+    .querySelector(
+      ".cpt-schedule-cancel"
+    )
+    ?.addEventListener(
+      "click",
+      closeSchedule
+    );
 
-  overlay.addEventListener("click", (event) => {
-    if (event.target === overlay) {
-      closeSchedule();
+  overlay.addEventListener(
+    "click",
+    (event) => {
+      if (event.target === overlay) {
+        closeSchedule();
+      }
     }
-  });
+  );
 
   overlay
-    .querySelector(".cpt-schedule-set-date")
-    ?.addEventListener("click", (event) => {
-      const studentId =
-        event.currentTarget.dataset.studentId;
+    .querySelector(
+      ".cpt-schedule-set-date"
+    )
+    ?.addEventListener(
+      "click",
+      (event) => {
+        const studentId =
+          event.currentTarget.dataset
+            .studentId;
 
-      closeSchedule();
+        closeSchedule();
 
-      const input = document.querySelector(
-        `.cpt-end-date[data-student-id="${CSS.escape(
-          studentId
-        )}"]`
-      );
+        const input =
+          document.querySelector(
+            `.cpt-end-date[data-student-id="${CSS.escape(
+              studentId
+            )}"]`
+          );
 
-      input?.focus();
-      input?.showPicker?.();
-    });
+        input?.focus();
+        input?.showPicker?.();
+      }
+    );
 
   overlay
-    .querySelector(".cpt-schedule-print")
-    ?.addEventListener("click", () => {
-      document.body.classList.add(
-        "cpt-printing-student-schedule"
-      );
+    .querySelector(
+      ".cpt-schedule-print"
+    )
+    ?.addEventListener(
+      "click",
+      () => {
+        document.body.classList.add(
+          "cpt-printing-student-schedule"
+        );
 
-      window.print();
-    });
+        window.print();
+      }
+    );
 
   const handleEscape = (event) => {
-    if (event.key === "Escape") {
-      closeSchedule();
-      document.removeEventListener(
-        "keydown",
-        handleEscape
-      );
+    if (event.key !== "Escape") {
+      return;
     }
+
+    closeSchedule();
+
+    document.removeEventListener(
+      "keydown",
+      handleEscape
+    );
   };
 
   document.addEventListener(
@@ -555,15 +812,20 @@ function openStudentSchedule({
     createModal({
       title: "End Date Required",
       body: `
-        <div class="cpt-schedule-message">
+        <div
+          class="cpt-schedule-message"
+        >
           <p>
             Enter an end date for
-            <strong>${escapeHtml(studentName)}</strong>
+            <strong>
+              ${escapeHtml(studentName)}
+            </strong>
             before generating a weekly schedule.
           </p>
         </div>
       `,
-      focusEndDateStudentId: String(student.id)
+      focusEndDateStudentId:
+        String(student.id)
     });
 
     return;
@@ -575,39 +837,52 @@ function openStudentSchedule({
   const today =
     getStartOfToday();
 
-  if (!endDate || endDate <= today) {
+  if (
+    !endDate ||
+    endDate <= today
+  ) {
     createModal({
-      title: "Future End Date Required",
+      title:
+        "Future End Date Required",
       body: `
-        <div class="cpt-schedule-message">
+        <div
+          class="cpt-schedule-message"
+        >
           <p>
             The end date for
-            <strong>${escapeHtml(studentName)}</strong>
+            <strong>
+              ${escapeHtml(studentName)}
+            </strong>
             must be later than today.
           </p>
         </div>
       `,
-      focusEndDateStudentId: String(student.id)
+      focusEndDateStudentId:
+        String(student.id)
     });
 
     return;
   }
 
-  const missingItems =
-    student.missingSubmissionItems || [];
-
   /*
-   * Only unsubmitted required items are scheduled.
-   * Submitted items are excluded even if they are ungraded.
+   * Schedule only work that has not been submitted.
+   * Submitted-but-ungraded work is intentionally excluded.
    */
+  const missingItems =
+    student.missingSubmissionItems ||
+    [];
+
   if (!missingItems.length) {
     createModal({
       title: "No Work to Schedule",
       body: `
-        <div class="cpt-schedule-message">
+        <div
+          class="cpt-schedule-message"
+        >
           <p>
-            ${escapeHtml(studentName)} has submitted
-            all currently selected required items.
+            ${escapeHtml(studentName)}
+            has submitted all currently selected
+            required items.
           </p>
         </div>
       `
@@ -617,7 +892,10 @@ function openStudentSchedule({
   }
 
   const weeks =
-    createScheduleWeeks(today, endDate);
+    createScheduleWeeks(
+      today,
+      endDate
+    );
 
   const weightedItems =
     addWeightsToMissingItems({
@@ -630,59 +908,50 @@ function openStudentSchedule({
     weeks
   );
 
-  const totalKnownHours =
-    weightedItems.reduce(
-      (sum, item) =>
-        sum + (item.estimatedHours || 0),
-      0
-    );
-
-  const unknownHourItems =
-    weightedItems.filter(
-      (item) => item.estimatedHours === null
-    ).length;
-
   const summaryParts = [
-    `${missingItems.length} unsubmitted required item${
-      missingItems.length === 1 ? "" : "s"
-    }`,
+    `${missingItems.length} required item${
+        missingItems.length === 1
+        ? ""
+        : "s"
+    } remaining`,
     `${weeks.length} week${
-      weeks.length === 1 ? "" : "s"
-    }`
-  ];
+        weeks.length === 1
+        ? ""
+        : "s"
+    } remaining`
+    ];  
 
-  if (totalKnownHours > 0) {
-    summaryParts.push(
-      `approximately ${
-        Math.round(totalKnownHours * 10) / 10
-      } estimated hours`
-    );
-  }
-
-  if (unknownHourItems > 0) {
-    summaryParts.push(
-      `${unknownHourItems} item${
-        unknownHourItems === 1 ? "" : "s"
-      } without module-hour estimates`
-    );
-  }
+ 
 
   createModal({
-    title: `${studentName} — Weekly Success Plan`,
+    title:
+      `${studentName} — Weekly Success Plan`,
     showPrintButton: true,
     body: `
-      <div class="cpt-student-schedule-sheet">
-        <header class="cpt-schedule-print-header">
+      <div
+        class="cpt-student-schedule-sheet"
+      >
+        <header
+          class="cpt-schedule-print-header"
+        >
           <h1>Weekly Success Plan</h1>
 
-          <div class="cpt-schedule-student-name">
+          <div
+            class="cpt-schedule-student-name"
+          >
             ${escapeHtml(studentName)}
           </div>
 
-          <div class="cpt-schedule-date-range">
-            ${escapeHtml(formatDate(today))}
+          <div
+            class="cpt-schedule-date-range"
+          >
+            ${escapeHtml(
+              formatDate(today)
+            )}
             through
-            ${escapeHtml(formatDate(endDate))}
+            ${escapeHtml(
+              formatDate(endDate)
+            )}
           </div>
 
           <p>
@@ -692,22 +961,24 @@ function openStudentSchedule({
           </p>
         </header>
 
-        <div class="cpt-schedule-weeks">
+        <div
+          class="cpt-schedule-weeks"
+        >
           ${weeks
             .map(renderWeek)
             .join("")}
         </div>
 
-        <footer class="cpt-schedule-print-footer">
+        <footer
+          class="cpt-schedule-print-footer"
+        >
           <p>
-            This plan includes only required items that
-            have not yet been submitted.
-          </p>
+            Complete all learning material for each listed module.
+            The checklist shows required items that have not yet
+            been submitted.
+        </p>
 
-          <p>
-            Workload estimates are based on module hours
-            shown in Canvas and are approximate.
-          </p>
+          
         </footer>
       </div>
     `
@@ -732,23 +1003,30 @@ export function bindStudentScheduleButtons({
       ".cpt-radar-schedule-button[data-student-id]"
     )
     .forEach((button) => {
-      button.addEventListener("click", () => {
-        const studentId =
-          button.dataset.studentId;
+      button.addEventListener(
+        "click",
+        () => {
+          const studentId =
+            button.dataset.studentId;
 
-        const student =
-          studentsById.get(String(studentId));
+          const student =
+            studentsById.get(
+              String(studentId)
+            );
 
-        if (!student) {
-          return;
+          if (!student) {
+            return;
+          }
+
+          openStudentSchedule({
+            student,
+            endDateValue:
+              endDates[
+                String(studentId)
+              ] || "",
+            assignments
+          });
         }
-
-        openStudentSchedule({
-          student,
-          endDateValue:
-            endDates[String(studentId)] || "",
-          assignments
-        });
-      });
+      );
     });
 }

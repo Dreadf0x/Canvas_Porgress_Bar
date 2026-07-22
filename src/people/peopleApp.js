@@ -13,6 +13,8 @@ import { applyTheme, getTheme } from "../themes/themes.js";
 
 import { initializeRadarTooltips } from "./radarTooltips.js";
 
+import { bindStudentScheduleButtons } from "./studentSchedule.js";
+
 import {
   loadEndDates,
   loadRequiredItemIds,
@@ -421,48 +423,104 @@ function bindRequiredItemsPanel({
     return;
   }
 
-  openButton.addEventListener("click", () => {
-    requiredPanel.hidden = false;
-  });
+  async function saveSelection() {
+    const checkedIds = Array.from(
+      panel.querySelectorAll(
+        ".cpt-radar-required-checkbox:checked"
+      )
+    ).map(
+      (checkbox) => String(checkbox.value)
+    );
 
-  closeButton?.addEventListener("click", () => {
-    requiredPanel.hidden = true;
-  });
+    await saveRequiredItemIds(
+      courseId,
+      checkedIds
+    );
+
+    panel.remove();
+    await initializePeopleView();
+  }
+
+  /*
+   * First click opens the popup.
+   * Clicking the header button again saves the current
+   * selection, closes the popup, and refreshes Radar.
+   */
+  openButton.addEventListener(
+    "click",
+    async () => {
+      if (requiredPanel.hidden) {
+        requiredPanel.hidden = false;
+        return;
+      }
+
+      openButton.disabled = true;
+
+      try {
+        await saveSelection();
+      } catch (error) {
+        console.error(
+          "Wayfinder could not save required items:",
+          error
+        );
+
+        openButton.disabled = false;
+      }
+    }
+  );
+
+  /*
+   * The X closes without saving.
+   */
+  closeButton?.addEventListener(
+    "click",
+    () => {
+      requiredPanel.hidden = true;
+    }
+  );
 
   saveButton?.addEventListener(
     "click",
     async () => {
-      const checkedIds = Array.from(
-        panel.querySelectorAll(
-          ".cpt-radar-required-checkbox:checked"
-        )
-      ).map(
-        (checkbox) => String(checkbox.value)
-      );
+      saveButton.disabled = true;
 
-      await saveRequiredItemIds(
-        courseId,
-        checkedIds
-      );
+      try {
+        await saveSelection();
+      } catch (error) {
+        console.error(
+          "Wayfinder could not save required items:",
+          error
+        );
 
-      panel.remove();
-      await initializePeopleView();
+        saveButton.disabled = false;
+      }
     }
   );
 
   resetButton?.addEventListener(
     "click",
     async () => {
-      const defaultIds =
-        getDefaultRequiredItemIds(assignments);
+      resetButton.disabled = true;
 
-      await saveRequiredItemIds(
-        courseId,
-        defaultIds
-      );
+      try {
+        const defaultIds =
+          getDefaultRequiredItemIds(assignments);
 
-      panel.remove();
-      await initializePeopleView();
+        await saveRequiredItemIds(
+          courseId,
+          defaultIds
+        );
+
+        panel.remove();
+        await initializePeopleView();
+      } catch (error) {
+        console.error(
+          "Wayfinder could not reset required items:",
+          error
+        );
+
+        resetButton.disabled = false;
+      }
     }
   );
 }
@@ -903,9 +961,17 @@ export async function initializePeopleView() {
       courseId
     });
 
+    
     bindRadarThemeMenu({
       panel,
       courseId
+    });
+
+    bindStudentScheduleButtons({
+      panel,
+      students: studentsWithProgress,
+      endDates,
+      assignments: selectedAssignments
     });
 
     initializeRadarTooltips(panel);
