@@ -17,36 +17,52 @@ function getDaysSinceLastActivity(student) {
     return Number.POSITIVE_INFINITY;
   }
 
-  const lastActivityTime = new Date(lastActivity).getTime();
+  const lastActivityTime =
+    new Date(lastActivity).getTime();
 
   if (Number.isNaN(lastActivityTime)) {
     return Number.POSITIVE_INFINITY;
   }
 
-  const differenceMs = Date.now() - lastActivityTime;
+  const differenceMs =
+    Date.now() - lastActivityTime;
 
   return Math.max(
     0,
-    Math.floor(differenceMs / (1000 * 60 * 60 * 24))
+    Math.floor(
+      differenceMs /
+        (1000 * 60 * 60 * 24)
+    )
   );
 }
 
 function formatLastActivity(student) {
-  const diffDays = getDaysSinceLastActivity(student);
+  const diffDays =
+    getDaysSinceLastActivity(student);
 
   if (!Number.isFinite(diffDays)) {
     return "No activity";
   }
 
-  if (diffDays <= 0) return "Today";
-  if (diffDays === 1) return "1 day";
+  if (diffDays <= 0) {
+    return "Today";
+  }
+
+  if (diffDays === 1) {
+    return "1 day";
+  }
+
   return `${diffDays} days`;
 }
 
 function getActivityStatus(student) {
-  const diffDays = getDaysSinceLastActivity(student);
+  const diffDays =
+    getDaysSinceLastActivity(student);
 
-  if (!Number.isFinite(diffDays) || diffDays >= 8) {
+  if (
+    !Number.isFinite(diffDays) ||
+    diffDays >= 8
+  ) {
     return {
       icon: "⛔",
       className: "cpt-activity-inactive"
@@ -75,62 +91,125 @@ export function renderStudentRadarTable({
   let rows = "";
 
   if (loading) {
-    rows = `<tr><td colspan="5">Loading students...</td></tr>`;
+    rows = `
+      <tr>
+        <td colspan="6">
+          Loading students...
+        </td>
+      </tr>
+    `;
   } else if (error) {
     rows = `
       <tr>
-        <td colspan="5">
-          Could not load students: ${escapeHtml(error)}
+        <td colspan="6">
+          Could not load students:
+          ${escapeHtml(error)}
         </td>
       </tr>
     `;
   } else if (!students.length) {
-    rows = `<tr><td colspan="5">No students found.</td></tr>`;
+    rows = `
+      <tr>
+        <td colspan="6">
+          No students found.
+        </td>
+      </tr>
+    `;
   } else {
     rows = students
       .map((student) => {
-        const activity = getActivityStatus(student);
-        const inactiveDays = getDaysSinceLastActivity(student);
+        const activity =
+          getActivityStatus(student);
+
+        const inactiveDays =
+          getDaysSinceLastActivity(student);
+
+        const studentName =
+          student.name ||
+          student.sortable_name ||
+          "Unknown Student";
+
+        const endDate =
+          endDates[String(student.id)] || "";
+
+        const missingItemCount =
+          student.missingSubmissionItems?.length ||
+          0;
 
         return `
           <tr
             data-radar-student-row
+            data-student-id="${escapeHtml(
+              student.id
+            )}"
             data-inactive-days="${inactiveDays}"
-            data-submitted-percent="${student.submittedPercent ?? ""}"
-            data-graded-percent="${student.gradedPercent ?? ""}"
+            data-submitted-percent="${
+              student.submittedPercent ?? ""
+            }"
+            data-graded-percent="${
+              student.gradedPercent ?? ""
+            }"
           >
             <td>
-              ${escapeHtml(
-                student.name ||
-                student.sortable_name ||
-                "Unknown Student"
-              )}
+              ${escapeHtml(studentName)}
+            </td>
+
+            <td class="cpt-radar-schedule-cell">
+              <button
+                type="button"
+                class="cpt-radar-schedule-button"
+                data-student-id="${escapeHtml(
+                  student.id
+                )}"
+                title="Create weekly schedule for ${escapeHtml(
+                  studentName
+                )}. ${missingItemCount} unsubmitted required items."
+                aria-label="Create weekly schedule for ${escapeHtml(
+                  studentName
+                )}"
+              >
+                <span aria-hidden="true">▦</span>
+              </button>
             </td>
 
             <td>
               ${renderRadarProgressBar({
-                percent: student.submittedPercent,
-                tooltipTitle: "Required Items Not Submitted",
-                items: student.missingSubmissionItems || [],
-                completeMessage: "All required items submitted"
+                percent:
+                  student.submittedPercent,
+                tooltipTitle:
+                  "Required Items Not Submitted",
+                items:
+                  student.missingSubmissionItems ||
+                  [],
+                completeMessage:
+                  "All required items submitted"
               })}
             </td>
 
             <td>
               ${renderRadarProgressBar({
-                percent: student.gradedPercent,
-                tooltipTitle: "Required Items Not Yet Graded",
-                items: student.ungradedItems || [],
-                completeMessage: "All required items graded"
+                percent:
+                  student.gradedPercent,
+                tooltipTitle:
+                  "Required Items Not Yet Graded",
+                items:
+                  student.ungradedItems || [],
+                completeMessage:
+                  "All required items graded"
               })}
             </td>
 
             <td>
-              <span class="cpt-activity-badge ${activity.className}">
+              <span
+                class="cpt-activity-badge ${activity.className}"
+              >
                 <span class="cpt-activity-icon">
                   ${activity.icon}
                 </span>
-                ${escapeHtml(formatLastActivity(student))}
+
+                ${escapeHtml(
+                  formatLastActivity(student)
+                )}
               </span>
             </td>
 
@@ -138,10 +217,10 @@ export function renderStudentRadarTable({
               <input
                 type="date"
                 class="cpt-end-date"
-                data-student-id="${escapeHtml(student.id)}"
-                value="${escapeHtml(
-                  endDates[String(student.id)] || ""
+                data-student-id="${escapeHtml(
+                  student.id
                 )}"
+                value="${escapeHtml(endDate)}"
               >
             </td>
           </tr>
@@ -153,7 +232,9 @@ export function renderStudentRadarTable({
   return `
     <div class="cpt-module-row">
       <div class="cpt-module-topline">
-        <span class="cpt-module-title">Students</span>
+        <span class="cpt-module-title">
+          Students
+        </span>
       </div>
 
       <div class="cpt-radar-table-wrap">
@@ -161,6 +242,7 @@ export function renderStudentRadarTable({
           <thead>
             <tr>
               <th>Student</th>
+              <th>Schedule</th>
               <th>Submitted</th>
               <th>Graded</th>
               <th>Last Activity</th>

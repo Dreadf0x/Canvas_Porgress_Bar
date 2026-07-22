@@ -17,10 +17,11 @@
 
 .cpt-radar-table th,
 .cpt-radar-table td {
-  padding: 8px 6px;
+  padding: 8px 4px;
   border-bottom: 1px solid var(--cpt-border);
   text-align: left;
   vertical-align: middle;
+  box-sizing: border-box;
 }
 
 .cpt-radar-table th {
@@ -39,28 +40,6 @@
   color: var(--cpt-text);
 }
 
-.cpt-radar-table td:first-child {
-  width: 38%;
-  font-weight: 700;
-}
-
-.cpt-radar-table th:nth-child(2),
-.cpt-radar-table td:nth-child(2),
-.cpt-radar-table th:nth-child(3),
-.cpt-radar-table td:nth-child(3) {
-  width: 16%;
-}
-
-.cpt-radar-table th:nth-child(4),
-.cpt-radar-table td:nth-child(4) {
-  width: 18%;
-}
-
-.cpt-radar-table th:nth-child(5),
-.cpt-radar-table td:nth-child(5) {
-  width: 12%;
-}
-
 .cpt-radar-table {
   table-layout: fixed;
 }
@@ -70,28 +49,57 @@
   white-space: normal;
 }
 
+/* Student */
 .cpt-radar-table th:nth-child(1),
 .cpt-radar-table td:nth-child(1) {
-  width: 38%;
+  width: 24%;
+  padding-left: 6px;
+  padding-right: 4px;
 }
 
+.cpt-radar-table td:nth-child(1) {
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Schedule */
 .cpt-radar-table th:nth-child(2),
-.cpt-radar-table td:nth-child(2),
+.cpt-radar-table td:nth-child(2) {
+  width: 64px;
+  padding-left: 2px;
+  padding-right: 2px;
+  text-align: center;
+}
+
+/* Submitted */
 .cpt-radar-table th:nth-child(3),
 .cpt-radar-table td:nth-child(3) {
-  width: 17%;
+  width: 19%;
   text-align: center;
 }
 
+/* Graded */
 .cpt-radar-table th:nth-child(4),
 .cpt-radar-table td:nth-child(4) {
-  width: 18%;
+  width: 19%;
   text-align: center;
 }
 
+/* Last Activity */
 .cpt-radar-table th:nth-child(5),
 .cpt-radar-table td:nth-child(5) {
-  width: 10%;
+  width: 14%;
+  text-align: center;
+}
+
+/* End Date */
+.cpt-radar-table th:nth-child(6),
+.cpt-radar-table td:nth-child(6) {
+  width: 112px;
+  padding-left: 2px;
+  padding-right: 2px;
   text-align: center;
 }
 
@@ -107,10 +115,17 @@
 
 
 .cpt-radar-table-wrap {
+  width: 100%;
+  max-width: 100%;
   max-height: 420px;
+
   overflow-y: auto;
+  overflow-x: hidden;
+
   border: 1px solid var(--cpt-border);
   border-radius: 12px;
+
+  box-sizing: border-box;
 }
 
 .cpt-radar-table thead th {
@@ -163,7 +178,8 @@ body #cpt-progress-tracker:has(.cpt-student-radar) {
 }
 
 .cpt-end-date {
-  width: 130px;
+  width: 100%;
+  max-width: 104px;
   border: 1px solid transparent;
   background: transparent;
   color: var(--cpt-text);
@@ -185,7 +201,10 @@ body #cpt-progress-tracker:has(.cpt-student-radar) {
 }
 
 .cpt-radar-table input.cpt-end-date {
-  width: 120px !important;
+  width: 100% !important;
+  max-width: 104px !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
   border: 0 !important;
   background: transparent !important;
   color: var(--cpt-text) !important;
@@ -205,12 +224,13 @@ body #cpt-progress-tracker:has(.cpt-student-radar) {
 .cpt-radar-progress {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  min-width: 0;
 }
 
 .cpt-radar-progress-track {
   flex: 1;
-  min-width: 70px;
+  min-width: 52px;
   height: 8px;
   border-radius: 999px;
   background: color-mix(in srgb, var(--cpt-text-muted) 18%, transparent);
@@ -224,7 +244,7 @@ body #cpt-progress-tracker:has(.cpt-student-radar) {
 }
 
 .cpt-radar-progress-label {
-  min-width: 34px;
+  min-width: 30px;
   font-size: 11px;
   font-weight: 800;
   color: var(--cpt-text-muted);
@@ -1030,4 +1050,45 @@ html[data-cpt-theme="ubtech"]
 .cpt-student-radar #cpt-theme-menu button:hover {
   background: var(--cpt-panel);
   color: var(--cpt-text);
+}
+
+/* ===========================
+   Student Schedule Button
+=========================== */
+
+.cpt-radar-schedule-cell {
+  text-align: center !important;
+}
+
+.cpt-radar-schedule-button {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid var(--cpt-border);
+  border-radius: 8px;
+
+  background: var(--cpt-panel-secondary);
+  color: var(--cpt-text);
+
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+.cpt-radar-schedule-button:hover {
+  border-color: var(--cpt-accent);
+  background: var(--cpt-panel);
+  color: var(--cpt-accent);
+}
+
+.cpt-radar-schedule-button:focus-visible {
+  outline: 2px solid var(--cpt-accent);
+  outline-offset: 2px;
 }
