@@ -121,9 +121,19 @@ function createScheduleWeeks(
       weekEnd = new Date(endDate);
     }
 
+    const dayCount =
+      Math.floor(
+        (
+          weekEnd.getTime() -
+          weekStart.getTime()
+        ) /
+          (1000 * 60 * 60 * 24)
+      ) + 1;
+
     weeks.push({
       startDate: new Date(weekStart),
       endDate: new Date(weekEnd),
+      dayCount,
       items: [],
       estimatedHours: 0,
       unknownHourItems: 0,
@@ -135,6 +145,7 @@ function createScheduleWeeks(
 
   return weeks;
 }
+
 
 function buildModuleStats(
   assignments = []
@@ -186,14 +197,14 @@ function addWeightsToMissingItems({
       stats?.totalRequiredItems || 1;
 
     /*
-     * A module's stated hours represent its complete
-     * workload. Divide those hours across all selected
-     * required items in that module, then schedule only
-     * the portion represented by unsubmitted items.
+     * Module hours are used only as an internal weight
+     * for balancing work across the available dates.
+     * Calculated hours are not displayed to students.
      */
     const estimatedHours =
       moduleHours !== null
-        ? moduleHours / totalRequiredItems
+        ? moduleHours /
+          totalRequiredItems
         : null;
 
     return {
@@ -201,11 +212,6 @@ function addWeightsToMissingItems({
       moduleName,
       estimatedHours,
 
-      /*
-       * Items without an hour estimate still need weight
-       * so they are spread through the plan rather than
-       * being gathered into one week.
-       */
       scheduleWeight:
         estimatedHours !== null
           ? estimatedHours
@@ -213,6 +219,7 @@ function addWeightsToMissingItems({
     };
   });
 }
+
 
 function getRangeWeight(
   prefixWeights,
@@ -234,18 +241,17 @@ function getRangeWeight(
  */
 function createBalancedPartitions(
   weightedItems,
-  requestedPartitionCount
+  weeks
 ) {
-  const itemCount = weightedItems.length;
+  const itemCount =
+    weightedItems.length;
 
-  if (!itemCount) {
-    return [];
+  const weekCount =
+    weeks.length;
+
+  if (!itemCount || !weekCount) {
+    return weeks.map(() => []);
   }
-
-  const partitionCount = Math.min(
-    requestedPartitionCount,
-    itemCount
-  );
 
   const prefixWeights =
     new Array(itemCount + 1).fill(0);
@@ -263,17 +269,34 @@ function createBalancedPartitions(
   const totalWeight =
     prefixWeights[itemCount];
 
-  const targetWeight =
-    totalWeight / partitionCount;
+  const totalDays = weeks.reduce(
+    (sum, week) =>
+      sum + Math.max(1, week.dayCount || 1),
+    0
+  );
 
   /*
-   * costs[groupCount][itemCountUsed]
+   * Each week's target workload is proportional to the
+   * number of calendar days available in that week.
+   */
+  const targetWeights = weeks.map(
+    (week) =>
+      totalWeight *
+      (
+        Math.max(1, week.dayCount || 1) /
+        totalDays
+      )
+  );
+
+  /*
+   * costs[weeksUsed][itemsUsed]
    *
-   * Stores the lowest total squared difference from
-   * the target weekly workload.
+   * Empty weeks are allowed. This is important when the
+   * final week contains only one day and should receive
+   * little or no new work.
    */
   const costs = Array.from(
-    { length: partitionCount + 1 },
+    { length: weekCount + 1 },
     () =>
       new Array(itemCount + 1).fill(
         Number.POSITIVE_INFINITY
@@ -281,7 +304,7 @@ function createBalancedPartitions(
   );
 
   const previousBreak = Array.from(
-    { length: partitionCount + 1 },
+    { length: weekCount + 1 },
     () =>
       new Array(itemCount + 1).fill(-1)
   );
@@ -289,34 +312,53 @@ function createBalancedPartitions(
   costs[0][0] = 0;
 
   for (
-    let groupCount = 1;
-    groupCount <= partitionCount;
-    groupCount += 1
+    let weekNumber = 1;
+    weekNumber <= weekCount;
+    weekNumber += 1
   ) {
+    const week =
+      weeks[weekNumber - 1];
+
+    const targetWeight =
+      targetWeights[weekNumber - 1];
+
     /*
-     * At least groupCount items are needed because
-     * every created group contains at least one item.
-     */
+    * A very short final week is reserved for catching up,
+    * checking submissions, and finishing anything left over.
+    *
+    * All planned required items must be assigned before it.
+    */
+    const isShortFinalWeek =
+      weekNumber === weekCount &&
+      weekCount > 1 &&
+      week.dayCount < 3;
+
     for (
-      let itemsUsed = groupCount;
+      let itemsUsed = 0;
       itemsUsed <= itemCount;
       itemsUsed += 1
     ) {
-      const minimumPreviousItems =
-        groupCount - 1;
+      /*
+       * splitIndex may equal itemsUsed, which creates an
+       * empty week. Assignment order remains unchanged.
+       */
+      /*
+ * For a short final week, splitIndex must equal itemsUsed.
+ * That creates an empty partition and forces all required
+ * work into the earlier dated weeks.
+ */
+    const firstSplitIndex =
+      isShortFinalWeek
+        ? itemsUsed
+        : 0;
 
-      const maximumPreviousItems =
-        itemsUsed - 1;
-
-      for (
-        let splitIndex =
-          minimumPreviousItems;
-        splitIndex <=
-          maximumPreviousItems;
-        splitIndex += 1
-      ) {
+    for (
+      let splitIndex = firstSplitIndex;
+      splitIndex <= itemsUsed;
+      splitIndex += 1
+    ) {
         const previousCost =
-          costs[groupCount - 1][
+          costs[weekNumber - 1][
             splitIndex
           ];
 
@@ -336,20 +378,46 @@ function createBalancedPartitions(
         const difference =
           groupWeight - targetWeight;
 
+        /*
+         * Overloading a week is penalized more heavily
+         * than leaving some unused capacity. This keeps
+         * short final weeks from receiving large modules.
+         */
+        const overloadMultiplier =
+          groupWeight > targetWeight
+            ? 2.5
+            : 1;
+
         const groupCost =
-          difference * difference;
+          difference *
+          difference *
+          overloadMultiplier;
+
+        /*
+         * Slightly prefer doing work earlier when two
+         * distributions have nearly the same balance.
+         */
+        const latenessPenalty =
+          groupWeight *
+          (
+            (weekNumber - 1) /
+            Math.max(1, weekCount - 1)
+          ) *
+          0.01;
 
         const candidateCost =
-          previousCost + groupCost;
+          previousCost +
+          groupCost +
+          latenessPenalty;
 
         if (
           candidateCost <
-          costs[groupCount][itemsUsed]
+          costs[weekNumber][itemsUsed]
         ) {
-          costs[groupCount][itemsUsed] =
+          costs[weekNumber][itemsUsed] =
             candidateCost;
 
-          previousBreak[groupCount][
+          previousBreak[weekNumber][
             itemsUsed
           ] = splitIndex;
         }
@@ -357,37 +425,39 @@ function createBalancedPartitions(
     }
   }
 
-  const partitions = [];
+  const partitions =
+    new Array(weekCount).fill(null);
 
-  let groupCount = partitionCount;
+  let weekNumber = weekCount;
   let itemsUsed = itemCount;
 
-  while (groupCount > 0) {
+  while (weekNumber > 0) {
     const splitIndex =
-      previousBreak[groupCount][
+      previousBreak[weekNumber][
         itemsUsed
       ];
 
     if (splitIndex < 0) {
       /*
-       * Defensive fallback. This should not occur,
-       * but it prevents a blank plan if the partition
-       * table cannot be reconstructed.
+       * Defensive fallback: place all work in order
+       * across the available weeks.
        */
-      return weightedItems.map(
-        (item) => [item]
+      return weeks.map(
+        (_, index) =>
+          index === 0
+            ? [...weightedItems]
+            : []
       );
     }
 
-    partitions.unshift(
+    partitions[weekNumber - 1] =
       weightedItems.slice(
         splitIndex,
         itemsUsed
-      )
-    );
+      );
 
     itemsUsed = splitIndex;
-    groupCount -= 1;
+    weekNumber -= 1;
   }
 
   return partitions;
@@ -424,14 +494,9 @@ function distributeItemsAcrossWeeks(
   const partitions =
     createBalancedPartitions(
       weightedItems,
-      weeks.length
+      weeks
     );
 
-  /*
-   * If there are more weeks than assignments, work is
-   * placed in the earlier weeks and the remaining weeks
-   * become catch-up/review weeks.
-   */
   partitions.forEach(
     (partition, weekIndex) => {
       const week = weeks[weekIndex];
@@ -440,9 +505,9 @@ function distributeItemsAcrossWeeks(
         return;
       }
 
-      partition.forEach((item) => {
+      for (const item of partition) {
         addItemToWeek(week, item);
-      });
+      }
     }
   );
 
