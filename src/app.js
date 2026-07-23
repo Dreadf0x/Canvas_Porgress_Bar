@@ -23,6 +23,8 @@ import {
 } from "./ui/panel.js";
 import { applyTheme, THEMES, getTheme } from "./themes/themes.js";
 
+import { openSuccessPlan } from "./people/studentSchedule.js";
+
 
 
 
@@ -51,6 +53,7 @@ export function initializeApp() {
     showSettingsForModuleId: null,
     collapsed: false,
     theme: THEMES.ubtech.id,
+    scheduleEndDate: "",
     role: "student"
   };
 
@@ -93,7 +96,8 @@ export function initializeApp() {
       passingPercent: PASSING_PERCENT,
       theme: appState.theme,
       themes: THEMES,
-      themeLogo: getTheme(appState.theme).logo
+      themeLogo: getTheme(appState.theme).logo,
+      scheduleEndDate: appState.scheduleEndDate
     });
   }
 
@@ -126,7 +130,8 @@ export function initializeApp() {
       appState.collapsed = false;
       await saveUiState(appState.courseId, {
         collapsed: appState.collapsed,
-        theme: appState.theme
+        theme: appState.theme,
+        scheduleEndDate: appState.scheduleEndDate
       });
       await reloadDataAndRender();
     }
@@ -139,7 +144,8 @@ export function initializeApp() {
       appState.collapsed = true;
       await saveUiState(appState.courseId, {
         collapsed: appState.collapsed,
-        theme: appState.theme
+        theme: appState.theme,
+        scheduleEndDate: appState.scheduleEndDate
       });
       removeExistingUI();
       createCollapsedTab();
@@ -233,6 +239,99 @@ export function initializeApp() {
   
   function bindEvents(wrapper) {
     bindHeaderButtons();
+
+
+    const scheduleEndDateInput =
+  wrapper.querySelector(
+    "#cpt-student-plan-end-date"
+  );
+
+const scheduleButton =
+  wrapper.querySelector(
+    "#cpt-student-plan-button"
+  );
+
+scheduleEndDateInput?.addEventListener(
+  "change",
+  async () => {
+    appState.scheduleEndDate =
+      scheduleEndDateInput.value;
+
+    await saveUiState(appState.courseId, {
+      collapsed: appState.collapsed,
+      theme: appState.theme,
+      scheduleEndDate:
+        appState.scheduleEndDate
+    });
+  }
+);
+
+scheduleButton?.addEventListener(
+  "click",
+  async () => {
+    appState.scheduleEndDate =
+      scheduleEndDateInput?.value || "";
+
+    await saveUiState(appState.courseId, {
+      collapsed: appState.collapsed,
+      theme: appState.theme,
+      scheduleEndDate:
+        appState.scheduleEndDate
+    });
+
+    /*
+     * Create the same assignment shape used by
+     * Student Radar's schedule generator.
+     */
+    const scheduleItems =
+      appState.modules.flatMap(
+        (module) =>
+          module.items
+            .filter(
+              (item) =>
+                item.status !== "info_only"
+            )
+            .map((item) => ({
+              id: item.id,
+              name: item.title,
+              moduleName: module.name,
+              status: item.status
+            }))
+      );
+
+    /*
+     * Only items with no submission are scheduled.
+     * Waiting-for-grade and below-passing items are
+     * intentionally excluded.
+     */
+    const missingItems =
+      scheduleItems
+        .filter(
+          (item) =>
+            item.status === "missing"
+        )
+        .map(({ status, ...item }) => item);
+
+    const assignments =
+      scheduleItems.map(
+        ({ status, ...item }) => item
+      );
+
+    openSuccessPlan({
+      personName:
+        appState.data?.user?.name ||
+        appState.data?.user?.login_id ||
+        "Student",
+      personId: "self",
+      endDateValue:
+        appState.scheduleEndDate,
+      missingItems,
+      assignments
+    });
+  }
+);
+    
+
     const themeButton = wrapper.querySelector("#cpt-theme-button");
     const themeMenu = wrapper.querySelector("#cpt-theme-menu");
 
@@ -250,7 +349,8 @@ export function initializeApp() {
 
         await saveUiState(appState.courseId, {
           collapsed: appState.collapsed,
-          theme: appState.theme
+          theme: appState.theme,
+          scheduleEndDate: appState.scheduleEndDate
         });
 
         rerender();
@@ -336,10 +436,16 @@ export function initializeApp() {
 
     appState.courseId = courseId;
     const uiState = await loadUiState(courseId);
-    appState.collapsed = Boolean(uiState.collapsed);
-    appState.theme = getTheme(uiState.theme).id;
-    applyTheme(appState.theme);
-   
+   appState.collapsed =
+  Boolean(uiState.collapsed);
+
+  appState.theme =
+    getTheme(uiState.theme).id;
+
+  appState.scheduleEndDate =
+    String(uiState.scheduleEndDate || "");
+
+  applyTheme(appState.theme);
 
     const wrapper = createShell();
     if (!wrapper && appState.collapsed) return;

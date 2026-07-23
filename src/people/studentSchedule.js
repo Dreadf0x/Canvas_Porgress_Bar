@@ -1050,6 +1050,24 @@ function openStudentSchedule({
   });
 }
 
+export function openSuccessPlan({
+  personName = "Student",
+  personId = "self",
+  endDateValue = "",
+  missingItems = [],
+  assignments = []
+} = {}) {
+  openStudentSchedule({
+    student: {
+      id: personId,
+      name: personName,
+      missingSubmissionItems: missingItems
+    },
+    endDateValue,
+    assignments
+  });
+}
+
 export function bindStudentScheduleButtons({
   panel,
   students = [],

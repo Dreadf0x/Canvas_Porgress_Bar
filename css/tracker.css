@@ -749,3 +749,497 @@ html[data-cpt-theme="forest"] {
 .cpt-theme-menu button:hover {
   background: var(--cpt-panel);
 }
+
+
+/* ===========================
+   Student Success Plan Controls
+=========================== */
+
+.cpt-student-plan-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  padding: 12px 14px;
+
+  background: var(--cpt-panel-secondary);
+  border-bottom: 1px solid var(--cpt-border);
+}
+
+.cpt-student-plan-copy {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.cpt-student-plan-copy strong {
+  color: var(--cpt-text);
+
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.cpt-student-plan-copy span {
+  color: var(--cpt-text-muted);
+
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.cpt-student-plan-actions {
+  flex: 0 0 auto;
+
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  gap: 5px 7px;
+}
+
+.cpt-student-plan-actions label {
+  color: var(--cpt-text-muted);
+
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.cpt-student-plan-end-date {
+  width: 128px;
+  min-width: 0;
+  padding: 6px 7px;
+
+  border: 1px solid var(--cpt-border);
+  border-radius: 8px;
+
+  background: var(--cpt-panel);
+  color: var(--cpt-text);
+
+  font: inherit;
+  font-size: 11px;
+}
+
+#cpt-student-plan-button {
+  grid-column: 1 / -1;
+
+  padding: 7px 10px;
+
+  border: 1px solid var(--cpt-accent);
+  border-radius: 8px;
+
+  background: var(--cpt-accent);
+  color: #ffffff;
+
+  font: inherit;
+  font-size: 11px;
+  font-weight: 900;
+
+  cursor: pointer;
+}
+
+#cpt-student-plan-button:hover {
+  background: var(--cpt-accent-hover);
+  color: #ffffff;
+}
+
+@media (max-width: 480px) {
+  .cpt-student-plan-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .cpt-student-plan-actions {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .cpt-student-plan-end-date {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+
+/* ===========================
+   Student Weekly Schedule
+=========================== */
+
+.cpt-student-schedule-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483646;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+
+  background: rgba(15, 23, 42, 0.58);
+}
+
+.cpt-student-schedule-modal {
+  width: min(900px, calc(100vw - 48px));
+  max-height: calc(100vh - 48px);
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  background: var(--cpt-panel-secondary);
+  color: var(--cpt-text);
+
+  border: 1px solid var(--cpt-border);
+  border-radius: 14px;
+
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.34);
+}
+
+.cpt-schedule-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  padding: 14px 18px;
+
+  background: var(--cpt-accent);
+  color: #ffffff;
+
+  border-bottom: 1px solid var(--cpt-border);
+}
+
+.cpt-schedule-modal-header h2 {
+  margin: 0;
+  color: inherit;
+
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.cpt-schedule-close {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 9px;
+
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+
+  font-size: 22px;
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+.cpt-schedule-modal-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 18px;
+}
+
+.cpt-schedule-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+
+  padding: 12px 18px;
+
+  background: var(--cpt-panel);
+  border-top: 1px solid var(--cpt-border);
+}
+
+.cpt-schedule-modal-actions button {
+  padding: 8px 12px;
+
+  border: 1px solid var(--cpt-border);
+  border-radius: 9px;
+
+  background: var(--cpt-panel-secondary);
+  color: var(--cpt-text);
+
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+.cpt-schedule-modal-actions button:hover {
+  border-color: var(--cpt-accent);
+}
+
+.cpt-schedule-print,
+.cpt-schedule-set-date {
+  background: var(--cpt-accent) !important;
+  border-color: var(--cpt-accent) !important;
+  color: #ffffff !important;
+}
+
+.cpt-schedule-message {
+  padding: 20px;
+
+  background: var(--cpt-panel);
+  border: 1px solid var(--cpt-border);
+  border-radius: 10px;
+
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.cpt-schedule-message p {
+  margin: 0;
+}
+
+.cpt-student-schedule-sheet {
+  color: var(--cpt-text);
+}
+
+.cpt-schedule-print-header {
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+
+  border-bottom: 2px solid var(--cpt-accent);
+}
+
+.cpt-schedule-print-header h1 {
+  margin: 0 0 5px;
+
+  color: var(--cpt-text);
+
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.cpt-schedule-student-name {
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.cpt-schedule-date-range {
+  margin-top: 3px;
+
+  color: var(--cpt-text-muted);
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.cpt-schedule-print-header p {
+  margin: 10px 0 0;
+
+  color: var(--cpt-text-muted);
+
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.cpt-schedule-weeks {
+  display: grid;
+  gap: 14px;
+}
+
+.cpt-schedule-week {
+  break-inside: avoid;
+
+  border: 1px solid var(--cpt-border);
+  border-radius: 10px;
+
+  overflow: hidden;
+}
+
+.cpt-schedule-week-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+
+  padding: 10px 12px;
+
+  background: var(--cpt-panel);
+  border-bottom: 1px solid var(--cpt-border);
+}
+
+.cpt-schedule-week-header h3 {
+  margin: 0;
+
+  color: var(--cpt-text);
+
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.cpt-schedule-week-header span {
+  display: block;
+  margin-top: 2px;
+
+  color: var(--cpt-text-muted);
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.cpt-schedule-week-header strong {
+  max-width: 45%;
+
+  color: var(--cpt-text-muted);
+
+  font-size: 10px;
+  line-height: 1.3;
+  text-align: right;
+}
+
+.cpt-schedule-module {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--cpt-border);
+}
+
+.cpt-schedule-module:last-child {
+  border-bottom: 0;
+}
+
+.cpt-schedule-module h4 {
+  margin: 0 0 7px;
+
+  color: var(--cpt-text);
+
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.cpt-schedule-task-list {
+  margin: 0;
+  padding: 0;
+
+  list-style: none;
+}
+
+.cpt-schedule-task-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+
+  padding: 4px 0;
+
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.cpt-schedule-checkbox {
+  flex: 0 0 auto;
+
+  width: 13px;
+  height: 13px;
+  margin-top: 1px;
+
+  border: 1.5px solid currentColor;
+  border-radius: 2px;
+}
+
+.cpt-schedule-empty-week {
+  margin: 0;
+  padding: 12px;
+
+  color: var(--cpt-text-muted);
+
+  font-size: 11px;
+  font-style: italic;
+}
+
+.cpt-schedule-print-footer {
+  margin-top: 16px;
+  padding-top: 10px;
+
+  border-top: 1px solid var(--cpt-border);
+
+  color: var(--cpt-text-muted);
+
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.cpt-schedule-print-footer p {
+  margin: 2px 0;
+}
+
+@media print {
+  body.cpt-printing-student-schedule
+    > *:not(.cpt-student-schedule-overlay) {
+    display: none !important;
+  }
+
+  body.cpt-printing-student-schedule
+    .cpt-student-schedule-overlay {
+    position: static;
+    display: block;
+
+    padding: 0;
+    background: #ffffff;
+  }
+
+  body.cpt-printing-student-schedule
+    .cpt-student-schedule-modal {
+    width: 100%;
+    max-height: none;
+
+    display: block;
+
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  body.cpt-printing-student-schedule
+    .cpt-schedule-modal-header,
+  body.cpt-printing-student-schedule
+    .cpt-schedule-modal-actions {
+    display: none !important;
+  }
+
+  body.cpt-printing-student-schedule
+    .cpt-schedule-modal-body {
+    overflow: visible;
+    padding: 0;
+  }
+
+  body.cpt-printing-student-schedule
+    .cpt-student-schedule-sheet {
+    color: #000000;
+  }
+
+  body.cpt-printing-student-schedule
+    .cpt-schedule-week {
+    border-color: #777777;
+  }
+
+  body.cpt-printing-student-schedule
+    .cpt-schedule-week-header {
+    background: #eeeeee;
+  }
+}
+
+.cpt-schedule-module-instruction {
+  margin: 0 0 8px;
+
+  color: var(--cpt-text-muted);
+
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+
+.cpt-schedule-module-instruction {
+  margin: 0 0 8px;
+
+  color: var(--cpt-text-muted);
+
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.4;
+}

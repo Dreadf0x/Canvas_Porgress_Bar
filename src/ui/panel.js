@@ -94,7 +94,8 @@ export function renderTracker({
   passingPercent,
   theme,
   themeLogo,
-  themes
+  themes,
+  scheduleEndDate = ""
 }) {
   if (!wrapper) return;
 
@@ -180,17 +181,46 @@ export function renderTracker({
         <button id="cpt-refresh" type="button" title="Refresh progress">↻</button>
       </div>
     </div>
+    </div>
+
+    ${
+      !isInstructor
+        ? `
+          <div class="cpt-student-plan-controls">
+            <div class="cpt-student-plan-copy">
+              <strong>Create a Success Plan</strong>
+              <span>
+                Enter your course end date to create a printable
+                weekly schedule for your remaining work.
+              </span>
+            </div>
+
+            <div class="cpt-student-plan-actions">
+              <label for="cpt-student-plan-end-date">
+                End Date
+              </label>
+
+              <input
+                type="date"
+                id="cpt-student-plan-end-date"
+                class="cpt-end-date cpt-student-plan-end-date"
+                data-student-id="self"
+                value="${escapeHtml(scheduleEndDate)}"
+              >
+
+              <button
+                type="button"
+                id="cpt-student-plan-button"
+              >
+                Create Schedule
+              </button>
+            </div>
+          </div>
+        `
+        : ""
+    }
 
     <div class="cpt-overall">
-      <div class="cpt-module-topline">
-        <span class="cpt-module-title">Overall Progress</span>
-        <span class="cpt-module-percent">${overallPercent}%</span>
-      </div>
-      <div class="cpt-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${overallPercent}">
-        <div class="cpt-bar-fill" style="width: ${overallPercent}%"></div>
-      </div>
-      <div class="cpt-status">${overallComplete}/${overallTotal} Completed</div>
-    </div>
 
     <div class="cpt-summary">
 
